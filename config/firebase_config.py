@@ -43,28 +43,11 @@ class FirebaseManager:
     def initialize_firebase(self):
         """Inicializa Firebase Admin e Pyrebase"""
         try:
-            # Inicializar Firebase Admin (para Firestore)
-            if not firebase_admin._apps:
-                # Para desenvolvimento - criar credenciais dummy
-                cred = credentials.Certificate({
-                    "type": "service_account",
-                    "project_id": FIREBASE_CONFIG["projectId"],
-                    "private_key_id": "dummy",
-                    "private_key": "-----BEGIN PRIVATE KEY-----\nDUMMY_KEY\n-----END PRIVATE KEY-----\n",
-                    "client_email": f"firebase-adminsdk@{FIREBASE_CONFIG['projectId']}.iam.gserviceaccount.com",
-                    "client_id": "dummy",
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://accounts.google.com/o/oauth2/token",
-                })
-                firebase_admin.initialize_app(cred)
-            
-            # Inicializar Firestore
-            self.db = firestore.client()
-            
-            # Inicializar Pyrebase para autenticação
+            # Inicializar Pyrebase para autenticação (mais simples)
             firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
             self.auth = firebase.auth()
             
+            # Se chegou até aqui, Firebase está funcionando
             print("✅ Firebase inicializado com sucesso!")
             
         except Exception as e:
