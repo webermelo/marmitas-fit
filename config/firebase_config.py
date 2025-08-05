@@ -8,31 +8,17 @@ import firebase_admin
 from firebase_admin import credentials, firestore, auth as firebase_auth
 import pyrebase
 
-# Configuração do Firebase usando Streamlit Secrets (seguro para deploy)
-try:
-    # Em produção (Streamlit Cloud) - usar secrets
-    FIREBASE_CONFIG = {
-        "apiKey": st.secrets["firebase"]["apiKey"],
-        "authDomain": st.secrets["firebase"]["authDomain"],
-        "projectId": st.secrets["firebase"]["projectId"],
-        "storageBucket": st.secrets["firebase"]["storageBucket"],
-        "messagingSenderId": st.secrets["firebase"]["messagingSenderId"],
-        "appId": st.secrets["firebase"]["appId"],
-        "measurementId": st.secrets["firebase"]["measurementId"],
-        "databaseURL": st.secrets["firebase"]["databaseURL"]
-    }
-except (KeyError, AttributeError):
-    # Em desenvolvimento local - usar credenciais diretas
-    FIREBASE_CONFIG = {
-        "apiKey": "AIzaSyAqT9_WZpr5vHYI27YNL9SY0mjmm376f90",
-        "authDomain": "marmita-fit-6a3ca.firebaseapp.com", 
-        "projectId": "marmita-fit-6a3ca",
-        "storageBucket": "marmita-fit-6a3ca.firebasestorage.app",
-        "messagingSenderId": "183148230819",
-        "appId": "1:183148230819:web:c72f2a2c545ea0f443a716",
-        "measurementId": "G-1XD2XZTWGC",
-        "databaseURL": "https://marmita-fit-6a3ca-default-rtdb.firebaseio.com/"
-    }
+# Configuração do Firebase - funciona tanto local quanto em produção
+FIREBASE_CONFIG = {
+    "apiKey": "AIzaSyAqT9_WZpr5vHYI27YNL9SY0mjmm376f90",
+    "authDomain": "marmita-fit-6a3ca.firebaseapp.com", 
+    "projectId": "marmita-fit-6a3ca",
+    "storageBucket": "marmita-fit-6a3ca.firebasestorage.app",
+    "messagingSenderId": "183148230819",
+    "appId": "1:183148230819:web:c72f2a2c545ea0f443a716",
+    "measurementId": "G-1XD2XZTWGC",
+    "databaseURL": "https://marmita-fit-6a3ca-default-rtdb.firebaseio.com/"
+}
 
 class FirebaseManager:
     def __init__(self):
