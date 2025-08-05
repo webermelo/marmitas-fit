@@ -27,8 +27,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Firebase temporariamente desabilitado para deploy inicial
-FIREBASE_AVAILABLE = False
+# Firebase usando REST API (sem pyrebase4)
+try:
+    from utils.firebase_auth import get_firebase_auth
+    firebase_auth = get_firebase_auth()
+    FIREBASE_AVAILABLE = firebase_auth is not None
+except Exception as e:
+    FIREBASE_AVAILABLE = False
+    st.error(f"⚠️ Erro Firebase: {e}")
 
 def check_auth():
     """Verificação de autenticação com Firebase ou modo demo"""
@@ -60,36 +66,28 @@ def show_login_page():
             
             if st.form_submit_button("🔑 Entrar", use_container_width=True):
                 if email and password:
-                    try:
-                        firebase_manager = get_firebase_manager()
-                        auth_client = firebase_manager.get_auth_client()
+                    if firebase_auth:
+                        # Fazer login com Firebase REST API
+                        result = firebase_auth.sign_in_with_email_password(email, password)
                         
-                        if auth_client:
-                            # Fazer login com Firebase
-                            user = auth_client.sign_in_with_email_and_password(email, password)
+                        if result["success"]:
+                            user_data = result["user"]
                             
                             # Salvar dados do usuário na sessão
                             st.session_state.user = {
-                                "email": user['email'],
-                                "uid": user['localId'],
-                                "display_name": user.get('displayName', email.split('@')[0])
+                                "email": user_data["email"],
+                                "uid": user_data["uid"],
+                                "display_name": user_data["display_name"]
                             }
-                            st.session_state.firebase_token = user['idToken']
+                            st.session_state.firebase_token = user_data["token"]
+                            st.session_state.firebase_refresh_token = user_data["refresh_token"]
                             
                             st.success("✅ Login realizado com sucesso!")
                             st.rerun()
                         else:
-                            st.error("❌ Erro: Firebase não configurado.")
-                    
-                    except Exception as e:
-                        if "INVALID_EMAIL" in str(e):
-                            st.error("❌ Email inválido.")
-                        elif "WRONG_PASSWORD" in str(e):
-                            st.error("❌ Senha incorreta.")
-                        elif "USER_NOT_FOUND" in str(e):
-                            st.error("❌ Usuário não encontrado.")
-                        else:
-                            st.error(f"❌ Erro no login: {str(e)}")
+                            st.error(f"❌ {result['error']}")
+                    else:
+                        st.error("❌ Firebase não disponível.")
                 else:
                     st.error("❌ Preencha email e senha.")
     
@@ -109,37 +107,28 @@ def show_login_page():
                     elif len(password_reg) < 6:
                         st.error("❌ A senha deve ter pelo menos 6 caracteres.")
                     else:
-                        try:
-                            firebase_manager = get_firebase_manager()
-                            auth_client = firebase_manager.get_auth_client()
+                        if firebase_auth:
+                            # Criar usuário no Firebase
+                            result = firebase_auth.sign_up_with_email_password(email_reg, password_reg, nome)
                             
-                            if auth_client:
-                                # Criar usuário no Firebase
-                                user = auth_client.create_user_with_email_and_password(email_reg, password_reg)
-                                
-                                # Atualizar perfil com nome
-                                auth_client.update_profile(user['idToken'], display_name=nome)
+                            if result["success"]:
+                                user_data = result["user"]
                                 
                                 # Salvar dados do usuário na sessão
                                 st.session_state.user = {
-                                    "email": user['email'],
-                                    "uid": user['localId'],
-                                    "display_name": nome
+                                    "email": user_data["email"],
+                                    "uid": user_data["uid"],
+                                    "display_name": user_data["display_name"]
                                 }
-                                st.session_state.firebase_token = user['idToken']
+                                st.session_state.firebase_token = user_data["token"]
+                                st.session_state.firebase_refresh_token = user_data["refresh_token"]
                                 
                                 st.success("✅ Conta criada com sucesso!")
                                 st.rerun()
                             else:
-                                st.error("❌ Erro: Firebase não configurado.")
-                        
-                        except Exception as e:
-                            if "EMAIL_EXISTS" in str(e):
-                                st.error("❌ Este email já está em uso.")
-                            elif "WEAK_PASSWORD" in str(e):
-                                st.error("❌ Senha muito fraca. Use pelo menos 6 caracteres.")
-                            else:
-                                st.error(f"❌ Erro ao criar conta: {str(e)}")
+                                st.error(f"❌ {result['error']}")
+                        else:
+                            st.error("❌ Firebase não disponível.")
                 else:
                     st.error("❌ Preencha todos os campos.")
     
