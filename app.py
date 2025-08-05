@@ -27,19 +27,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Importar Firebase (com fallback)
-try:
-    from config.firebase_config import get_firebase_manager, FIREBASE_CONFIG
-    
-    # Testar se Firebase está realmente funcionando
-    firebase_manager = get_firebase_manager()
-    if firebase_manager.get_auth_client() is not None:
-        FIREBASE_AVAILABLE = True
-    else:
-        FIREBASE_AVAILABLE = False
-except Exception as e:
-    FIREBASE_AVAILABLE = False
-    # Não mostrar erro aqui, apenas usar modo demo
+# Firebase temporariamente desabilitado para deploy inicial
+FIREBASE_AVAILABLE = False
 
 def check_auth():
     """Verificação de autenticação com Firebase ou modo demo"""
