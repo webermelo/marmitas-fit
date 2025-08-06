@@ -240,6 +240,12 @@ def main():
         st.markdown("---")
         
         menu_options = ["🏠 Dashboard", "🥕 Ingredientes", "📝 Receitas", "🏭 Produção"]
+        
+        # Adicionar menu admin se usuário for administrador
+        from pages.admin import show_admin_menu_item
+        if show_admin_menu_item():
+            menu_options.append("👑 Administração")
+        
         selected_page = st.radio("Navegação:", menu_options)
     
     # Header principal
@@ -254,6 +260,9 @@ def main():
         show_receitas()
     elif selected_page == "🏭 Produção":
         show_producao()
+    elif selected_page == "👑 Administração":
+        from pages.admin import show_admin_page
+        show_admin_page()
 
 def show_dashboard():
     """Dashboard principal"""
