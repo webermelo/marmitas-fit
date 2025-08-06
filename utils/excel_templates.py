@@ -221,77 +221,52 @@ class ExcelTemplateGenerator:
         )
     
     def _create_excel_from_data(self, data, title, subtitle):
-        """Cria arquivo Excel formatado a partir dos dados"""
-        
-        # Criar workbook
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Template"
-        
-        # Título
-        ws.merge_cells('A1:' + chr(65 + len(data[0]) - 1) + '1')
-        ws['A1'] = title
-        ws['A1'].font = Font(size=16, bold=True, color="2E7D32")
-        ws['A1'].alignment = self.center_alignment
-        
-        # Subtítulo
-        ws.merge_cells('A2:' + chr(65 + len(data[0]) - 1) + '2')
-        ws['A2'] = subtitle
-        ws['A2'].font = Font(size=12, color="666666")
-        ws['A2'].alignment = self.center_alignment
-        
-        # Espaço
-        ws.append([])
+        """Cria arquivo Excel simples usando pandas (mais compatível)"""
         
         # Converter para DataFrame
         df = pd.DataFrame(data)
         
-        # Adicionar headers
-        headers = list(df.columns)
-        ws.append(headers)
-        
-        # Formatar headers
-        header_row = ws.max_row
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=header_row, column=col_num)
-            cell.font = self.header_font
-            cell.fill = self.header_fill
-            cell.alignment = self.center_alignment
-            cell.border = self.border
-        
-        # Adicionar dados
-        for row_data in dataframe_to_rows(df, index=False, header=False):
-            ws.append(row_data)
-        
-        # Formatar dados
-        for row in ws.iter_rows(min_row=header_row + 1, max_row=ws.max_row):
-            for cell in row:
-                cell.border = self.border
-                if isinstance(cell.value, bool):
-                    cell.alignment = self.center_alignment
-                elif isinstance(cell.value, (int, float)):
-                    cell.alignment = Alignment(horizontal='right', vertical='center')
-        
-        # Ajustar largura das colunas
-        for column in ws.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            
-            adjusted_width = min(max_length + 2, 50)
-            ws.column_dimensions[column_letter].width = adjusted_width
-        
-        # Salvar em buffer
+        # Criar buffer
         buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
         
+        # Usar pandas para criar Excel simples
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            # Adicionar título como primeira linha
+            title_df = pd.DataFrame([[title] + [''] * (len(df.columns) - 1)])
+            title_df.to_excel(writer, sheet_name='Template', index=False, header=False, startrow=0)
+            
+            # Adicionar subtítulo como segunda linha  
+            subtitle_df = pd.DataFrame([[subtitle] + [''] * (len(df.columns) - 1)])
+            subtitle_df.to_excel(writer, sheet_name='Template', index=False, header=False, startrow=1)
+            
+            # Adicionar dados principais com headers
+            df.to_excel(writer, sheet_name='Template', index=False, startrow=3)
+            
+            # Acessar worksheet para formatação básica
+            worksheet = writer.sheets['Template']
+            
+            # Formatação simples
+            try:
+                # Título em verde e negrito
+                title_cell = worksheet['A1']
+                title_cell.font = Font(size=14, bold=True, color="2E7D32")
+                
+                # Subtítulo em cinza
+                subtitle_cell = worksheet['A2'] 
+                subtitle_cell.font = Font(size=10, color="666666")
+                
+                # Headers em negrito
+                header_row = 4  # Linha dos headers
+                for col in range(1, len(df.columns) + 1):
+                    cell = worksheet.cell(row=header_row, column=col)
+                    if cell.value:
+                        cell.font = Font(bold=True)
+                        
+            except Exception:
+                # Se formatação falhar, continua sem formatação
+                pass
+        
+        buffer.seek(0)
         return buffer.getvalue()
 
 # Funções para uso no Streamlit
