@@ -278,16 +278,16 @@ def main():
         
         with col1:
             st.write("**🥕 Ingredientes**")
-            csv_ingredientes = """Nome,Categoria,Preço (R$),Unid.Receita,Unid.Compra,Kcal/Unid,Fator Conv.,Ativo,Observações
-Frango (peito),Proteína Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado
-Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Grão longo tipo 1
-Brócolis,Vegetal,6.50,g,kg,0.34,1000,TRUE,Fresco preço médio
+            csv_ingredientes = """Nome,Categoria,Preco,Unid_Receita,Unid_Compra,Kcal_Unid,Fator_Conv,Ativo,Observacoes
+Frango peito,Proteina Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado
+Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Grao longo tipo 1
+Brocolis,Vegetal,6.50,g,kg,0.34,1000,TRUE,Fresco preco medio
 Azeite extra virgem,Gordura,12.00,ml,L,8.84,1000,TRUE,Primeira prensagem
 Sal refinado,Tempero,1.20,g,kg,0.00,1000,TRUE,Iodado"""
             
             st.download_button(
                 "📥 Download Ingredientes",
-                csv_ingredientes.encode('utf-8'),
+                csv_ingredientes.encode('utf-8-sig'),  # UTF-8 com BOM para Excel
                 f"ingredientes_{datetime.now().strftime('%Y%m%d')}.csv",
                 "text/csv",
                 use_container_width=True
@@ -295,18 +295,18 @@ Sal refinado,Tempero,1.20,g,kg,0.00,1000,TRUE,Iodado"""
         
         with col2:
             st.write("**📦 Embalagens**")
-            csv_embalagens = """Nome,Tipo,Preço (R$),Capacidade (ml),Categoria,Ativo,Descrição
+            csv_embalagens = """Nome,Tipo,Preco,Capacidade_ml,Categoria,Ativo,Descricao
 Marmita 500ml,descartavel,0.50,500,principal,TRUE,PP transparente com tampa
 Marmita 750ml,descartavel,0.65,750,principal,TRUE,PP transparente com tampa
 Marmita 1000ml,descartavel,0.80,1000,principal,TRUE,PP transparente com tampa
 Pote sobremesa 150ml,descartavel,0.25,150,complemento,TRUE,Para doces e frutas
-Talher plástico,utensilio,0.08,0,utensilio,TRUE,Garfo + faca + colher
+Talher plastico,utensilio,0.08,0,utensilio,TRUE,Garfo + faca + colher
 Guardanapo,higiene,0.05,0,higiene,TRUE,Papel 20x20cm
-Sacola plástica,transporte,0.12,0,transporte,TRUE,30x40cm alça camiseta"""
+Sacola plastica,transporte,0.12,0,transporte,TRUE,30x40cm alca camiseta"""
             
             st.download_button(
                 "📥 Download Embalagens",
-                csv_embalagens.encode('utf-8'),
+                csv_embalagens.encode('utf-8-sig'),  # UTF-8 com BOM para Excel
                 f"embalagens_{datetime.now().strftime('%Y%m%d')}.csv",
                 "text/csv",
                 use_container_width=True

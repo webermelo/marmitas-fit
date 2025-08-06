@@ -24,39 +24,39 @@ def is_admin(user_email):
 # Funções para gerar templates CSV (mais compatível)
 def generate_ingredientes_template():
     """Gera template CSV de ingredientes"""
-    csv_content = """Nome,Categoria,Preço (R$),Unid.Receita,Unid.Compra,Kcal/Unid,Fator Conv.,Ativo,Observações
-Frango (peito),Proteína Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado
-Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Grão longo tipo 1
-Brócolis,Vegetal,6.50,g,kg,0.34,1000,TRUE,Fresco preço médio
+    csv_content = """Nome,Categoria,Preco,Unid_Receita,Unid_Compra,Kcal_Unid,Fator_Conv,Ativo,Observacoes
+Frango peito,Proteina Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado
+Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Grao longo tipo 1
+Brocolis,Vegetal,6.50,g,kg,0.34,1000,TRUE,Fresco preco medio
 Azeite extra virgem,Gordura,12.00,ml,L,8.84,1000,TRUE,Primeira prensagem
 Sal refinado,Tempero,1.20,g,kg,0.00,1000,TRUE,Iodado"""
     
-    return csv_content.encode('utf-8')
+    return csv_content.encode('utf-8-sig')
 
 def generate_embalagens_template():
     """Gera template CSV de embalagens"""
-    csv_content = """Nome,Tipo,Preço (R$),Capacidade (ml),Categoria,Ativo,Descrição
+    csv_content = """Nome,Tipo,Preco,Capacidade_ml,Categoria,Ativo,Descricao
 Marmita 500ml,descartavel,0.50,500,principal,TRUE,PP transparente com tampa
 Marmita 750ml,descartavel,0.65,750,principal,TRUE,PP transparente com tampa
 Marmita 1000ml,descartavel,0.80,1000,principal,TRUE,PP transparente com tampa
 Pote sobremesa 150ml,descartavel,0.25,150,complemento,TRUE,Para doces e frutas
-Talher plástico,utensilio,0.08,0,utensilio,TRUE,Garfo + faca + colher
+Talher plastico,utensilio,0.08,0,utensilio,TRUE,Garfo + faca + colher
 Guardanapo,higiene,0.05,0,higiene,TRUE,Papel 20x20cm
-Sacola plástica,transporte,0.12,0,transporte,TRUE,30x40cm alça camiseta"""
+Sacola plastica,transporte,0.12,0,transporte,TRUE,30x40cm alca camiseta"""
     
-    return csv_content.encode('utf-8')
+    return csv_content.encode('utf-8-sig')
 
 def generate_custos_fixos_template():
     """Gera template CSV de custos fixos"""
-    csv_content = """Categoria,Item,Custo Mensal (R$),Rateio por Marmita,Descrição
-Energia,Conta de luz,150.00,0.30,Fogão geladeira freezer
-Gás,Botijão 13kg,80.00,0.16,Consumo médio mensal
-Água,Conta de água,60.00,0.12,Limpeza e preparo
-Aluguel,Espaço cozinha,800.00,1.60,Proporcional ao uso
-Mão de obra,Salário próprio,2000.00,4.00,Base: 500 marmitas/mês
-TOTAL,,3090.00,6.18,Base: 500 marmitas/mês"""
+    csv_content = """Categoria,Item,Custo_Mensal,Rateio_por_Marmita,Descricao
+Energia,Conta de luz,150.00,0.30,Fogao geladeira freezer
+Gas,Botijao 13kg,80.00,0.16,Consumo medio mensal
+Agua,Conta de agua,60.00,0.12,Limpeza e preparo
+Aluguel,Espaco cozinha,800.00,1.60,Proporcional ao uso
+Mao de obra,Salario proprio,2000.00,4.00,Base 500 marmitas por mes
+TOTAL,,3090.00,6.18,Base 500 marmitas por mes"""
     
-    return csv_content.encode('utf-8')
+    return csv_content.encode('utf-8-sig')
 
 def show_admin_page():
     """Página principal de administração"""
@@ -200,16 +200,19 @@ def show_upload_section():
     """Seção de upload de dados"""
     
     st.header("📤 Upload de Dados")
-    st.warning("🚧 Funcionalidade em desenvolvimento")
+    st.info("📋 Faça upload dos templates CSV preenchidos para popular o banco de dados")
     
-    # Placeholder para futura implementação
-    st.info("""
-    **Próximas funcionalidades:**
-    - Upload de planilhas Excel
-    - Validação automática de dados
-    - Preview antes da importação
-    - Log de alterações
-    """)
+    # Tabs para diferentes tipos de upload
+    tab1, tab2, tab3 = st.tabs(["🥕 Ingredientes", "📦 Embalagens", "🏠 Custos Fixos"])
+    
+    with tab1:
+        upload_ingredientes()
+    
+    with tab2:
+        upload_embalagens()
+    
+    with tab3:
+        upload_custos_fixos()
 
 def show_users_section():
     """Seção de gerenciamento de usuários"""
@@ -254,6 +257,235 @@ def show_stats_section():
         st.metric("📄 PDFs Baixados", "9.234")
         st.metric("💡 Sugestões de Preço", "24.789")
         st.metric("⚡ Uptime Sistema", "99.7%")
+
+def upload_ingredientes():
+    """Upload de ingredientes CSV"""
+    
+    st.subheader("🥕 Upload Ingredientes")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de ingredientes",
+        type=['csv'],
+        key="ingredientes_upload"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Ler CSV com encoding correto
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Nome', 'Categoria', 'Preco', 'Unid_Receita', 'Unid_Compra', 'Kcal_Unid', 'Fator_Conv', 'Ativo']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                return
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Ingredientes", key="confirm_ingredientes"):
+                success_count = upload_to_firebase_ingredientes(df)
+                if success_count > 0:
+                    st.success(f"🎉 {success_count} ingredientes salvos com sucesso!")
+                else:
+                    st.error("❌ Erro ao salvar ingredientes")
+                    
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+
+def upload_embalagens():
+    """Upload de embalagens CSV"""
+    
+    st.subheader("📦 Upload Embalagens")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de embalagens",
+        type=['csv'],
+        key="embalagens_upload"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Nome', 'Tipo', 'Preco', 'Capacidade_ml', 'Categoria', 'Ativo']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                return
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Embalagens", key="confirm_embalagens"):
+                success_count = upload_to_firebase_embalagens(df)
+                if success_count > 0:
+                    st.success(f"🎉 {success_count} embalagens salvas com sucesso!")
+                else:
+                    st.error("❌ Erro ao salvar embalagens")
+                    
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+
+def upload_custos_fixos():
+    """Upload de custos fixos CSV"""
+    
+    st.subheader("🏠 Upload Custos Fixos")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de custos fixos",
+        type=['csv'],
+        key="custos_upload"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Categoria', 'Item', 'Custo_Mensal', 'Rateio_por_Marmita']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                return
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Custos Fixos", key="confirm_custos"):
+                success_count = upload_to_firebase_custos(df)
+                if success_count > 0:
+                    st.success(f"🎉 {success_count} custos fixos salvos com sucesso!")
+                else:
+                    st.error("❌ Erro ao salvar custos fixos")
+                    
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+
+def upload_to_firebase_ingredientes(df):
+    """Salva ingredientes no Firestore"""
+    try:
+        from utils.firestore_client import get_firestore_client
+        
+        db = get_firestore_client()
+        if not db:
+            st.error("Erro ao conectar com o banco de dados")
+            return 0
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            # Converter para dict e limpar valores NaN
+            ingredient_data = {
+                'nome': str(row['Nome']).strip(),
+                'categoria': str(row['Categoria']).strip(),
+                'preco': float(row['Preco']),
+                'unid_receita': str(row['Unid_Receita']).strip(),
+                'unid_compra': str(row['Unid_Compra']).strip(),
+                'kcal_unid': float(row['Kcal_Unid']),
+                'fator_conv': float(row['Fator_Conv']),
+                'ativo': str(row['Ativo']).upper() == 'TRUE',
+                'observacoes': str(row.get('Observacoes', '')).strip(),
+                'updated_at': pd.Timestamp.now().isoformat()
+            }
+            
+            # Salvar no Firestore (coleção global de ingredientes)
+            try:
+                db.collection('ingredientes_master').add(ingredient_data)
+                success_count += 1
+            except Exception as e:
+                st.warning(f"Erro ao salvar {ingredient_data['nome']}: {str(e)}")
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro geral no upload: {str(e)}")
+        return 0
+
+def upload_to_firebase_embalagens(df):
+    """Salva embalagens no Firestore"""
+    try:
+        from utils.firestore_client import get_firestore_client
+        
+        db = get_firestore_client()
+        if not db:
+            return 0
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            embalagem_data = {
+                'nome': str(row['Nome']).strip(),
+                'tipo': str(row['Tipo']).strip(),
+                'preco': float(row['Preco']),
+                'capacidade_ml': int(row['Capacidade_ml']) if row['Capacidade_ml'] != 0 else 0,
+                'categoria': str(row['Categoria']).strip(),
+                'ativo': str(row['Ativo']).upper() == 'TRUE',
+                'descricao': str(row.get('Descricao', '')).strip(),
+                'updated_at': pd.Timestamp.now().isoformat()
+            }
+            
+            try:
+                db.collection('embalagens_master').add(embalagem_data)
+                success_count += 1
+            except Exception as e:
+                st.warning(f"Erro ao salvar {embalagem_data['nome']}: {str(e)}")
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro geral no upload: {str(e)}")
+        return 0
+
+def upload_to_firebase_custos(df):
+    """Salva custos fixos no Firestore"""
+    try:
+        from utils.firestore_client import get_firestore_client
+        
+        db = get_firestore_client()
+        if not db:
+            return 0
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            custo_data = {
+                'categoria': str(row['Categoria']).strip(),
+                'item': str(row['Item']).strip(),
+                'custo_mensal': float(row['Custo_Mensal']),
+                'rateio_por_marmita': float(row['Rateio_por_Marmita']),
+                'descricao': str(row.get('Descricao', '')).strip(),
+                'updated_at': pd.Timestamp.now().isoformat()
+            }
+            
+            try:
+                db.collection('custos_fixos_master').add(custo_data)
+                success_count += 1
+            except Exception as e:
+                st.warning(f"Erro ao salvar {custo_data['categoria']}: {str(e)}")
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro geral no upload: {str(e)}")
+        return 0
 
 # Função para incluir no menu principal
 def show_admin_menu_item():
