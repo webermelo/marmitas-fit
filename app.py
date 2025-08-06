@@ -261,8 +261,74 @@ def main():
     elif selected_page == "🏭 Produção":
         show_producao()
     elif selected_page == "👑 Administração":
-        from pages.admin import show_admin_page
-        show_admin_page()
+        # Temporariamente desabilitado devido a problemas de cache
+        st.error("🚧 **Painel Admin em Manutenção**")
+        st.info("""
+        **Problema temporário**: O Streamlit Cloud está com cache de arquivos antigos.
+        
+        **Solução**: Aguarde algumas horas para o cache limpar automaticamente.
+        
+        **Alternativa**: Acesse os templates diretamente:
+        """)
+        
+        # Templates diretamente aqui como alternativa
+        st.subheader("📥 Templates CSV (Alternativa Temporária)")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.write("**🥕 Ingredientes**")
+            csv_ingredientes = """Nome,Categoria,Preço (R$),Unid.Receita,Unid.Compra,Kcal/Unid,Fator Conv.,Ativo,Observações
+Frango (peito),Proteína Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado
+Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Grão longo tipo 1
+Brócolis,Vegetal,6.50,g,kg,0.34,1000,TRUE,Fresco preço médio
+Azeite extra virgem,Gordura,12.00,ml,L,8.84,1000,TRUE,Primeira prensagem
+Sal refinado,Tempero,1.20,g,kg,0.00,1000,TRUE,Iodado"""
+            
+            st.download_button(
+                "📥 Download Ingredientes",
+                csv_ingredientes.encode('utf-8'),
+                f"ingredientes_{datetime.now().strftime('%Y%m%d')}.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        
+        with col2:
+            st.write("**📦 Embalagens**")
+            csv_embalagens = """Nome,Tipo,Preço (R$),Capacidade (ml),Categoria,Ativo,Descrição
+Marmita 500ml,descartavel,0.50,500,principal,TRUE,PP transparente com tampa
+Marmita 750ml,descartavel,0.65,750,principal,TRUE,PP transparente com tampa
+Marmita 1000ml,descartavel,0.80,1000,principal,TRUE,PP transparente com tampa
+Pote sobremesa 150ml,descartavel,0.25,150,complemento,TRUE,Para doces e frutas
+Talher plástico,utensilio,0.08,0,utensilio,TRUE,Garfo + faca + colher
+Guardanapo,higiene,0.05,0,higiene,TRUE,Papel 20x20cm
+Sacola plástica,transporte,0.12,0,transporte,TRUE,30x40cm alça camiseta"""
+            
+            st.download_button(
+                "📥 Download Embalagens",
+                csv_embalagens.encode('utf-8'),
+                f"embalagens_{datetime.now().strftime('%Y%m%d')}.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        
+        with col3:
+            st.write("**🏠 Custos Fixos**")
+            csv_custos = """Categoria,Item,Custo Mensal (R$),Rateio por Marmita,Descrição
+Energia,Conta de luz,150.00,0.30,Fogão geladeira freezer
+Gás,Botijão 13kg,80.00,0.16,Consumo médio mensal
+Água,Conta de água,60.00,0.12,Limpeza e preparo
+Aluguel,Espaço cozinha,800.00,1.60,Proporcional ao uso
+Mão de obra,Salário próprio,2000.00,4.00,Base: 500 marmitas/mês
+TOTAL,,3090.00,6.18,Base: 500 marmitas/mês"""
+            
+            st.download_button(
+                "📥 Download Custos Fixos",
+                csv_custos.encode('utf-8'),
+                f"custos_fixos_{datetime.now().strftime('%Y%m%d')}.csv",
+                "text/csv",
+                use_container_width=True
+            )
 
 def show_dashboard():
     """Dashboard principal"""
