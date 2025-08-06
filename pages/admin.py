@@ -5,7 +5,7 @@ Painel para gerenciar ingredientes, embalagens e usuários
 """
 
 import streamlit as st
-from utils.excel_templates import (
+from utils.excel_templates_fixed import (
     generate_ingredientes_template, 
     generate_embalagens_template, 
     generate_custos_fixos_template
