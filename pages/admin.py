@@ -14,9 +14,10 @@ from datetime import datetime
 
 # Lista de administradores autorizados
 ADMINS = [
-    "weber@marmitasfit.com",
-    "admin@marmitasfit.com", 
-    "demo@marmitasfit.com"  # Para testes
+    "weber.melo@gmail.com",    # Super Admin Principal
+    "weber@marmitasfit.com",   # Backup
+    "admin@marmitasfit.com",   # Admin secundário
+    "demo@marmitasfit.com"     # Para testes
 ]
 
 def is_admin(user_email):

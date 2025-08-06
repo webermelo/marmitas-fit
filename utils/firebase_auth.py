@@ -133,8 +133,9 @@ class FirebaseAuth:
             "EMAIL_EXISTS": "Este email já está em uso",
             "OPERATION_NOT_ALLOWED": "Operação não permitida",
             "TOO_MANY_ATTEMPTS_TRY_LATER": "Muitas tentativas. Tente novamente mais tarde",
-            "EMAIL_NOT_FOUND": "Email não encontrado",
+            "EMAIL_NOT_FOUND": "Email não encontrado. Você precisa criar uma conta primeiro.",
             "INVALID_PASSWORD": "Senha incorreta",
+            "INVALID_LOGIN_CREDENTIALS": "Email ou senha incorretos. Verifique suas credenciais.",
             "USER_DISABLED": "Usuário desabilitado",
             "INVALID_EMAIL": "Email inválido",
             "WEAK_PASSWORD": "Senha muito fraca. Use pelo menos 6 caracteres"
