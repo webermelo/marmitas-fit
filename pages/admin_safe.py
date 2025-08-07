@@ -40,12 +40,15 @@ def show_admin_page():
     st.success(f"🔓 Acesso autorizado: {user_email}")
     
     # Tabs principais
-    tab1, tab2 = st.tabs(["📥 Templates", "📊 Estatísticas"])
+    tab1, tab2, tab3 = st.tabs(["📥 Templates", "📤 Uploads", "📊 Estatísticas"])
     
     with tab1:
         show_templates_safe()
     
     with tab2:
+        show_uploads_safe()
+    
+    with tab3:
         show_stats_safe()
 
 def show_templates_safe():
@@ -54,7 +57,7 @@ def show_templates_safe():
     st.header("📥 Templates CSV")
     st.info("💡 Baixe os templates para facilitar o preenchimento de dados")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.subheader("🥕 Ingredientes")
@@ -134,6 +137,29 @@ TOTAL,,3090.00,6.18,Base 500 marmitas por mes"""
             use_container_width=True
         )
     
+    with col4:
+        st.subheader("📝 Receitas")
+        st.markdown("""
+        **Template para:**
+        - Nome da receita
+        - Ingredientes e quantidades
+        - Preço de custo
+        - Informações nutricionais
+        """)
+        
+        csv_receitas = """Nome,Categoria,Ingredientes_JSON,Porcoes,Calorias_Porcao,Preco_Custo,Margem_Lucro,Preco_Sugerido,Ativo,Observacoes
+Frango Grelhado com Arroz,Fitness,"{""frango_peito"":200_""arroz_integral"":100_""brocolis"":80_""azeite"":5}",1,420,8.50,40,11.90,TRUE,Rica em proteina
+Salada de Quinoa,Vegano,"{""quinoa"":80_""tomate"":60_""pepino"":40_""azeite"":10}",1,285,6.20,40,8.68,TRUE,Rica em fibras
+Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azeite"":5}",1,320,9.80,40,13.72,TRUE,Baixa caloria"""
+        
+        st.download_button(
+            label="📥 Download Receitas (CSV)",
+            data=csv_receitas.encode('utf-8-sig'),
+            file_name=f"receitas_template_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
     # Instruções de uso
     st.markdown("---")
     st.subheader("📋 Como usar os templates:")
@@ -162,7 +188,418 @@ TOTAL,,3090.00,6.18,Base 500 marmitas por mes"""
         - **Ingredientes:** Mensal (preços de mercado)
         - **Embalagens:** Trimestral (novos fornecedores)
         - **Custos Fixos:** Conforme necessário
+        - **Receitas:** Conforme criação de novos pratos
+        
+        ### 📝 Formato especial para Receitas:
+        
+        - **Ingredientes_JSON:** Use formato `{"ingrediente":quantidade_"outro":quantidade}`
+        - **Margem_Lucro:** Porcentagem (ex: 40 para 40%)
+        - **Exemplo:** `{"frango_peito":200_"arroz":100_"brocolis":50}`
         """)
+
+def show_uploads_safe():
+    """Seção de uploads CSV - versão segura"""
+    
+    st.header("📤 Upload de Dados")
+    st.info("📋 Faça upload dos templates CSV preenchidos para popular o banco de dados")
+    
+    # Tabs para diferentes tipos de upload
+    tab1, tab2, tab3, tab4 = st.tabs(["🥕 Ingredientes", "📦 Embalagens", "🏠 Custos Fixos", "📝 Receitas"])
+    
+    with tab1:
+        upload_ingredientes_safe()
+    
+    with tab2:
+        upload_embalagens_safe()
+    
+    with tab3:
+        upload_custos_fixos_safe()
+    
+    with tab4:
+        upload_receitas_safe()
+
+def upload_ingredientes_safe():
+    """Upload de ingredientes CSV - versão segura"""
+    
+    st.subheader("🥕 Upload Ingredientes")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de ingredientes",
+        type=['csv'],
+        key="ingredientes_upload_safe",
+        help="Use o template CSV baixado na aba Templates"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Usar pandas com engine Python (sem Excel dependencies)
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Nome', 'Categoria', 'Preco', 'Unid_Receita', 'Unid_Compra', 'Kcal_Unid', 'Fator_Conv', 'Ativo']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                st.info("💡 Baixe o template correto na aba Templates")
+                return
+            
+            # Validação de dados
+            validation_errors = validate_ingredientes_data(df)
+            if validation_errors:
+                st.warning("⚠️ **Problemas encontrados nos dados:**")
+                for error in validation_errors:
+                    st.write(f"- {error}")
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Ingredientes", key="confirm_ingredientes_safe"):
+                with st.spinner("Salvando ingredientes..."):
+                    success_count = save_ingredientes_to_session(df)
+                    if success_count > 0:
+                        st.success(f"🎉 {success_count} ingredientes salvos com sucesso!")
+                        st.balloons()
+                    else:
+                        st.error("❌ Erro ao salvar ingredientes")
+                        
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+            st.info("💡 Verifique se o arquivo está no formato CSV correto")
+
+def upload_embalagens_safe():
+    """Upload de embalagens CSV - versão segura"""
+    
+    st.subheader("📦 Upload Embalagens")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de embalagens",
+        type=['csv'],
+        key="embalagens_upload_safe",
+        help="Use o template CSV baixado na aba Templates"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Nome', 'Tipo', 'Preco', 'Capacidade_ml', 'Categoria', 'Ativo']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                return
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Embalagens", key="confirm_embalagens_safe"):
+                with st.spinner("Salvando embalagens..."):
+                    success_count = save_embalagens_to_session(df)
+                    if success_count > 0:
+                        st.success(f"🎉 {success_count} embalagens salvas com sucesso!")
+                        st.balloons()
+                    else:
+                        st.error("❌ Erro ao salvar embalagens")
+                        
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+
+def upload_custos_fixos_safe():
+    """Upload de custos fixos CSV - versão segura"""
+    
+    st.subheader("🏠 Upload Custos Fixos")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de custos fixos",
+        type=['csv'],
+        key="custos_upload_safe",
+        help="Use o template CSV baixado na aba Templates"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Categoria', 'Item', 'Custo_Mensal', 'Rateio_por_Marmita']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                return
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Custos Fixos", key="confirm_custos_safe"):
+                with st.spinner("Salvando custos fixos..."):
+                    success_count = save_custos_to_session(df)
+                    if success_count > 0:
+                        st.success(f"🎉 {success_count} custos fixos salvos com sucesso!")
+                        st.balloons()
+                    else:
+                        st.error("❌ Erro ao salvar custos fixos")
+                        
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+
+def upload_receitas_safe():
+    """Upload de receitas CSV - versão segura"""
+    
+    st.subheader("📝 Upload Receitas")
+    
+    uploaded_file = st.file_uploader(
+        "Selecione o arquivo CSV de receitas",
+        type=['csv'],
+        key="receitas_upload_safe",
+        help="Use o template CSV baixado na aba Templates"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            import pandas as pd
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
+            
+            st.write("📋 **Preview dos dados:**")
+            st.dataframe(df.head())
+            
+            st.write(f"📊 **Total de registros:** {len(df)}")
+            
+            # Validar colunas obrigatórias
+            required_columns = ['Nome', 'Categoria', 'Ingredientes_JSON', 'Porcoes', 'Calorias_Porcao', 'Preco_Custo', 'Ativo']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                st.error(f"❌ Colunas obrigatórias não encontradas: {', '.join(missing_columns)}")
+                return
+            
+            # Validação especial para receitas
+            validation_errors = validate_receitas_data(df)
+            if validation_errors:
+                st.warning("⚠️ **Problemas encontrados nos dados:**")
+                for error in validation_errors:
+                    st.write(f"- {error}")
+            
+            # Botão para confirmar upload
+            if st.button("✅ Confirmar Upload Receitas", key="confirm_receitas_safe"):
+                with st.spinner("Salvando receitas..."):
+                    success_count = save_receitas_to_session(df)
+                    if success_count > 0:
+                        st.success(f"🎉 {success_count} receitas salvas com sucesso!")
+                        st.balloons()
+                    else:
+                        st.error("❌ Erro ao salvar receitas")
+                        
+        except Exception as e:
+            st.error(f"❌ Erro ao processar arquivo: {str(e)}")
+
+def validate_ingredientes_data(df):
+    """Valida dados de ingredientes"""
+    errors = []
+    
+    for idx, row in df.iterrows():
+        linha = idx + 2  # +2 porque pandas começa em 0 e tem header
+        
+        # Validar preço
+        try:
+            preco = float(row['Preco'])
+            if preco <= 0:
+                errors.append(f"Linha {linha}: Preço deve ser maior que zero")
+        except:
+            errors.append(f"Linha {linha}: Preço inválido")
+        
+        # Validar ativo
+        if str(row['Ativo']).upper() not in ['TRUE', 'FALSE']:
+            errors.append(f"Linha {linha}: Ativo deve ser TRUE ou FALSE")
+    
+    return errors[:10]  # Limitar a 10 erros para não poluir a tela
+
+def validate_receitas_data(df):
+    """Valida dados de receitas"""
+    errors = []
+    
+    for idx, row in df.iterrows():
+        linha = idx + 2
+        
+        # Validar JSON de ingredientes (formato simplificado)
+        ingredientes_str = str(row['Ingredientes_JSON'])
+        if not (ingredientes_str.startswith('{') and ingredientes_str.endswith('}')):
+            errors.append(f"Linha {linha}: Formato de ingredientes inválido (deve começar com {{ e terminar com }})")
+        
+        # Validar porções
+        try:
+            porcoes = int(row['Porcoes'])
+            if porcoes <= 0:
+                errors.append(f"Linha {linha}: Porções deve ser maior que zero")
+        except:
+            errors.append(f"Linha {linha}: Porções inválido")
+    
+    return errors[:10]
+
+def save_ingredientes_to_session(df):
+    """Salva ingredientes no session state (versão demo)"""
+    try:
+        if 'demo_ingredients' not in st.session_state:
+            st.session_state.demo_ingredients = []
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            ingredient_data = {
+                'id': f"upload_{len(st.session_state.demo_ingredients)}_{success_count}",
+                'nome': str(row['Nome']).strip(),
+                'categoria': str(row['Categoria']).strip(),
+                'preco': float(row['Preco']),
+                'unid_receita': str(row['Unid_Receita']).strip(),
+                'unid_compra': str(row['Unid_Compra']).strip(),
+                'kcal_unid': float(row['Kcal_Unid']),
+                'fator_conv': float(row['Fator_Conv']),
+                'ativo': str(row['Ativo']).upper() == 'TRUE',
+                'observacoes': str(row.get('Observacoes', '')).strip(),
+                'source': 'upload_csv'
+            }
+            
+            st.session_state.demo_ingredients.append(ingredient_data)
+            success_count += 1
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro ao salvar ingredientes: {str(e)}")
+        return 0
+
+def save_embalagens_to_session(df):
+    """Salva embalagens no session state (versão demo)"""
+    try:
+        if 'demo_embalagens' not in st.session_state:
+            st.session_state.demo_embalagens = []
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            embalagem_data = {
+                'id': f"upload_emb_{len(st.session_state.demo_embalagens)}_{success_count}",
+                'nome': str(row['Nome']).strip(),
+                'tipo': str(row['Tipo']).strip(),
+                'preco': float(row['Preco']),
+                'capacidade_ml': int(row['Capacidade_ml']) if row['Capacidade_ml'] != 0 else 0,
+                'categoria': str(row['Categoria']).strip(),
+                'ativo': str(row['Ativo']).upper() == 'TRUE',
+                'descricao': str(row.get('Descricao', '')).strip(),
+                'source': 'upload_csv'
+            }
+            
+            st.session_state.demo_embalagens.append(embalagem_data)
+            success_count += 1
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro ao salvar embalagens: {str(e)}")
+        return 0
+
+def save_custos_to_session(df):
+    """Salva custos fixos no session state (versão demo)"""
+    try:
+        if 'demo_custos_fixos' not in st.session_state:
+            st.session_state.demo_custos_fixos = []
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            custo_data = {
+                'id': f"upload_custo_{len(st.session_state.demo_custos_fixos)}_{success_count}",
+                'categoria': str(row['Categoria']).strip(),
+                'item': str(row['Item']).strip(),
+                'custo_mensal': float(row['Custo_Mensal']),
+                'rateio_por_marmita': float(row['Rateio_por_Marmita']),
+                'descricao': str(row.get('Descricao', '')).strip(),
+                'source': 'upload_csv'
+            }
+            
+            st.session_state.demo_custos_fixos.append(custo_data)
+            success_count += 1
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro ao salvar custos fixos: {str(e)}")
+        return 0
+
+def save_receitas_to_session(df):
+    """Salva receitas no session state (versão demo)"""
+    try:
+        if 'demo_recipes' not in st.session_state:
+            st.session_state.demo_recipes = []
+        
+        success_count = 0
+        
+        for _, row in df.iterrows():
+            # Converter JSON simplificado de ingredientes
+            ingredientes_str = str(row['Ingredientes_JSON'])
+            ingredientes_dict = parse_simple_json(ingredientes_str)
+            
+            receita_data = {
+                'id': f"upload_receita_{len(st.session_state.demo_recipes)}_{success_count}",
+                'nome': str(row['Nome']).strip(),
+                'categoria': str(row['Categoria']).strip(),
+                'ingredientes': ingredientes_dict,
+                'porcoes': int(row['Porcoes']),
+                'calorias_porcao': float(row['Calorias_Porcao']),
+                'preco_custo': float(row['Preco_Custo']),
+                'margem_lucro': float(row.get('Margem_Lucro', 40)),
+                'preco_sugerido': float(row.get('Preco_Sugerido', 0)),
+                'ativo': str(row['Ativo']).upper() == 'TRUE',
+                'observacoes': str(row.get('Observacoes', '')).strip(),
+                'source': 'upload_csv'
+            }
+            
+            st.session_state.demo_recipes.append(receita_data)
+            success_count += 1
+        
+        return success_count
+        
+    except Exception as e:
+        st.error(f"Erro ao salvar receitas: {str(e)}")
+        return 0
+
+def parse_simple_json(json_str):
+    """Parser simples para formato {"item":valor_"item2":valor}"""
+    try:
+        # Remover chaves
+        content = json_str.strip('{}')
+        
+        # Separar por _
+        pairs = content.split('_')
+        
+        result = {}
+        for pair in pairs:
+            if ':' in pair:
+                # Separar por :
+                parts = pair.split(':')
+                if len(parts) >= 2:
+                    key = parts[0].strip().strip('"')
+                    value = float(parts[1].strip())
+                    result[key] = value
+        
+        return result
+        
+    except Exception as e:
+        return {}
 
 def show_stats_safe():
     """Seção de estatísticas - versão segura"""
