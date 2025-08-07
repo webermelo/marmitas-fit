@@ -10,6 +10,33 @@ import os
 import pandas as pd
 from datetime import datetime
 from io import BytesIO
+
+# Sistema de logging
+try:
+    from utils.logger import logger, log_exception, safe_import
+    logger.log_system_start()
+    logger.info("App iniciado com sistema de logging ativo")
+except Exception as e:
+    st.error(f"Erro ao inicializar logging: {e}")
+    # Fallback logger simples
+    class SimpleLogger:
+        def info(self, msg, data=None): print(f"INFO: {msg}")
+        def error(self, msg, exc=None, data=None): print(f"ERROR: {msg}")
+        def warning(self, msg, data=None): print(f"WARNING: {msg}")
+        def debug(self, msg, data=None): print(f"DEBUG: {msg}")
+        def log_user_action(self, action, user=None, details=None): print(f"ACTION: {action}")
+        def log_page_access(self, page, user=None): print(f"PAGE: {page}")
+    
+    logger = SimpleLogger()
+    
+    def log_exception(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"Erro em {func.__name__}", e)
+                raise
+        return wrapper
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -206,11 +233,15 @@ def init_demo_data():
     if 'demo_recipes' not in st.session_state:
         st.session_state.demo_recipes = []
 
+@log_exception
 def main():
     """Função principal da aplicação"""
     
+    logger.info("Iniciando função main()")
+    
     # Verificar autenticação
     if not check_auth():
+        logger.warning("Autenticação falhou")
         return
     
     # Inicializar dados
@@ -242,9 +273,18 @@ def main():
         menu_options = ["🏠 Dashboard", "🥕 Ingredientes", "📝 Receitas", "🏭 Produção"]
         
         # Adicionar menu admin se usuário for administrador
-        from pages.admin import show_admin_menu_item
-        if show_admin_menu_item():
-            menu_options.append("👑 Administração")
+        try:
+            from pages.admin_safe import show_admin_menu_item
+            from pages.debug import is_debug_enabled
+            
+            if show_admin_menu_item():
+                menu_options.append("👑 Administração")
+                
+                # Menu debug para admins
+                if is_debug_enabled():
+                    menu_options.append("🔍 Debug")
+        except Exception as e:
+            logger.error("Erro ao carregar menus admin", e)
         
         selected_page = st.radio("Navegação:", menu_options)
     
@@ -253,16 +293,33 @@ def main():
     
     # Roteamento de páginas
     if selected_page == "🏠 Dashboard":
+        logger.log_page_access("Dashboard", user.get('email'))
         show_dashboard()
     elif selected_page == "🥕 Ingredientes":
+        logger.log_page_access("Ingredientes", user.get('email'))
         show_ingredientes()
     elif selected_page == "📝 Receitas":
+        logger.log_page_access("Receitas", user.get('email'))
         show_receitas()
     elif selected_page == "🏭 Produção":
+        logger.log_page_access("Produção", user.get('email'))
         show_producao()
     elif selected_page == "👑 Administração":
-        from pages.admin_safe import show_admin_page
-        show_admin_page()
+        logger.log_page_access("Administração", user.get('email'))
+        try:
+            from pages.admin_safe import show_admin_page
+            show_admin_page()
+        except Exception as e:
+            logger.error("Erro ao carregar admin_safe", e)
+            st.error("Erro ao carregar painel administrativo. Detalhes nos logs.")
+    elif selected_page == "🔍 Debug":
+        logger.log_page_access("Debug", user.get('email'))
+        try:
+            from pages.debug import show_debug_page
+            show_debug_page()
+        except Exception as e:
+            logger.error("Erro ao carregar página debug", e)
+            st.error("Erro ao carregar página de debug. Detalhes nos logs.")
 
 def show_dashboard():
     """Dashboard principal"""
