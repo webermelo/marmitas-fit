@@ -6,7 +6,6 @@ Painel para gerenciar ingredientes, embalagens e usuários
 
 import streamlit as st
 import pandas as pd
-from io import BytesIO
 from datetime import datetime
 
 # Lista de administradores autorizados
@@ -61,18 +60,19 @@ TOTAL,,3090.00,6.18,Base 500 marmitas por mes"""
 def show_admin_page():
     """Página principal de administração"""
     
-    # Verificar autenticação
-    if 'user' not in st.session_state:
-        st.error("🔐 Acesso restrito. Faça login primeiro.")
-        return
-    
-    user_email = st.session_state.user.get('email', '')
-    
-    # Verificar permissões de admin
-    if not is_admin(user_email):
-        st.error("🚫 Acesso negado. Você não tem permissões de administrador.")
-        st.info(f"👤 Usuário atual: {user_email}")
-        return
+    try:
+        # Verificar autenticação
+        if 'user' not in st.session_state:
+            st.error("🔐 Acesso restrito. Faça login primeiro.")
+            return
+        
+        user_email = st.session_state.user.get('email', '')
+        
+        # Verificar permissões de admin
+        if not is_admin(user_email):
+            st.error("🚫 Acesso negado. Você não tem permissões de administrador.")
+            st.info(f"👤 Usuário atual: {user_email}")
+            return
     
     # Interface de administração
     st.title("👑 Painel de Administração")
@@ -86,17 +86,50 @@ def show_admin_page():
         "📊 Estatísticas"
     ])
     
-    with tab1:
-        show_templates_section()
+        with tab1:
+            show_templates_section()
+        
+        with tab2:
+            show_upload_section()
+        
+        with tab3:
+            show_users_section()
+        
+        with tab4:
+            show_stats_section()
     
-    with tab2:
-        show_upload_section()
-    
-    with tab3:
-        show_users_section()
-    
-    with tab4:
-        show_stats_section()
+    except Exception as e:
+        st.error(f"🚫 Erro no painel admin: {str(e)}")
+        st.info("📋 **Versão simplificada ativada**")
+        
+        # Interface simples de fallback
+        st.title("👑 Admin - Modo Básico")
+        
+        # Templates básicos
+        st.subheader("📥 Downloads")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            csv_ing = """Nome,Categoria,Preco,Unid_Receita,Unid_Compra,Kcal_Unid,Fator_Conv,Ativo,Observacoes
+Frango peito,Proteina Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado"""
+            
+            st.download_button(
+                "📥 Template Ingredientes",
+                csv_ing.encode('utf-8-sig'),
+                f"ingredientes_{datetime.now().strftime('%Y%m%d')}.csv",
+                "text/csv"
+            )
+        
+        with col2:
+            csv_emb = """Nome,Tipo,Preco,Capacidade_ml,Categoria,Ativo,Descricao
+Marmita 500ml,descartavel,0.50,500,principal,TRUE,PP transparente com tampa"""
+            
+            st.download_button(
+                "📥 Template Embalagens",
+                csv_emb.encode('utf-8-sig'),
+                f"embalagens_{datetime.now().strftime('%Y%m%d')}.csv",
+                "text/csv"
+            )
 
 def show_templates_section():
     """Seção de download de templates"""
@@ -271,9 +304,8 @@ def upload_ingredientes():
     
     if uploaded_file is not None:
         try:
-            # Ler CSV com encoding correto
-            import pandas as pd
-            df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+            # Ler CSV com encoding correto (forçar engine CSV puro)
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
             
             st.write("📋 **Preview dos dados:**")
             st.dataframe(df.head())
@@ -312,8 +344,7 @@ def upload_embalagens():
     
     if uploaded_file is not None:
         try:
-            import pandas as pd
-            df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
             
             st.write("📋 **Preview dos dados:**")
             st.dataframe(df.head())
@@ -352,8 +383,7 @@ def upload_custos_fixos():
     
     if uploaded_file is not None:
         try:
-            import pandas as pd
-            df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', engine='python')
             
             st.write("📋 **Preview dos dados:**")
             st.dataframe(df.head())
