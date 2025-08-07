@@ -261,59 +261,8 @@ def main():
     elif selected_page == "🏭 Produção":
         show_producao()
     elif selected_page == "👑 Administração":
-        try:
-            from pages.admin import show_admin_page
-            show_admin_page()
-        except Exception as e:
-            st.error(f"Erro ao carregar painel admin: {str(e)}")
-            st.info("Usando versão simplificada...")
-            
-            # Fallback simplificado caso haja erro
-            st.title("👑 Painel de Administração")
-            st.success("🔓 Acesso temporário autorizado")
-            
-            st.subheader("📥 Downloads Rápidos")
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.write("**🥕 Ingredientes**")
-                csv_ingredientes = """Nome,Categoria,Preco,Unid_Receita,Unid_Compra,Kcal_Unid,Fator_Conv,Ativo,Observacoes
-Frango peito,Proteina Animal,18.90,g,kg,1.65,1000,TRUE,Sem pele congelado
-Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Grao longo tipo 1
-Brocolis,Vegetal,6.50,g,kg,0.34,1000,TRUE,Fresco preco medio"""
-                
-                st.download_button(
-                    "📥 Download Ingredientes",
-                    csv_ingredientes.encode('utf-8-sig'),
-                    f"ingredientes_{datetime.now().strftime('%Y%m%d')}.csv",
-                    "text/csv"
-                )
-            
-            with col2:
-                st.write("**📦 Embalagens**")
-                csv_embalagens = """Nome,Tipo,Preco,Capacidade_ml,Categoria,Ativo,Descricao
-Marmita 500ml,descartavel,0.50,500,principal,TRUE,PP transparente com tampa
-Marmita 750ml,descartavel,0.65,750,principal,TRUE,PP transparente com tampa"""
-                
-                st.download_button(
-                    "📥 Download Embalagens",
-                    csv_embalagens.encode('utf-8-sig'),
-                    f"embalagens_{datetime.now().strftime('%Y%m%d')}.csv",
-                    "text/csv"
-                )
-            
-            with col3:
-                st.write("**🏠 Custos Fixos**")
-                csv_custos = """Categoria,Item,Custo_Mensal,Rateio_por_Marmita,Descricao
-Energia,Conta de luz,150.00,0.30,Fogao geladeira freezer
-Gas,Botijao 13kg,80.00,0.16,Consumo medio mensal"""
-                
-                st.download_button(
-                    "📥 Download Custos",
-                    csv_custos.encode('utf-8-sig'),
-                    f"custos_{datetime.now().strftime('%Y%m%d')}.csv",
-                    "text/csv"
-                )
+        from pages.admin_safe import show_admin_page
+        show_admin_page()
 
 def show_dashboard():
     """Dashboard principal"""
