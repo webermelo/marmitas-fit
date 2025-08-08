@@ -921,6 +921,21 @@ def show_ingredientes():
     """Página de ingredientes"""
     st.header("🥕 Gestão de Ingredientes")
     
+    # SEMPRE verificar e carregar do Firebase se lista estiver vazia
+    if not st.session_state.get('demo_ingredients') and 'user' in st.session_state:
+        st.info("🔄 Lista vazia - carregando ingredientes do Firebase...")
+        firebase_ingredients = load_ingredients_from_firebase()
+        if firebase_ingredients:
+            st.session_state.demo_ingredients = firebase_ingredients
+            st.success(f"✅ {len(firebase_ingredients)} ingredientes carregados do Firebase!")
+            st.rerun()
+        else:
+            st.session_state.demo_ingredients = []  # Garantir que existe
+    
+    # Garantir que demo_ingredients existe
+    if 'demo_ingredients' not in st.session_state:
+        st.session_state.demo_ingredients = []
+    
     # Detectar duplicatas reais por nome
     has_duplicates, total_duplicates, duplicate_list = detect_duplicates()
     
@@ -963,6 +978,29 @@ def show_ingredientes():
     
     with tab1:
         st.subheader("📋 Ingredientes Cadastrados")
+        
+        # DEBUG CRÍTICO: O que está acontecendo?
+        st.error(f"🚨 DEBUG: st.session_state.demo_ingredients tem {len(st.session_state.get('demo_ingredients', []))} itens")
+        
+        if st.session_state.get('demo_ingredients'):
+            st.success(f"✅ Encontrados {len(st.session_state.demo_ingredients)} ingredientes")
+            
+            # Debug dos primeiros ingredientes
+            st.write("**DEBUG - Primeiros 3 ingredientes:**")
+            for i, ing in enumerate(st.session_state.demo_ingredients[:3]):
+                st.write(f"Ingrediente {i+1}: {ing.get('Nome', ing.get('nome', 'SEM NOME'))}")
+        else:
+            st.error("❌ st.session_state.demo_ingredients está vazio ou None")
+            
+            # Tentar carregar do Firebase imediatamente
+            st.info("🔄 Tentando carregar do Firebase...")
+            firebase_ingredients = load_ingredients_from_firebase()
+            if firebase_ingredients:
+                st.session_state.demo_ingredients = firebase_ingredients
+                st.success(f"✅ Carregados {len(firebase_ingredients)} do Firebase!")
+                st.rerun()
+            else:
+                st.error("❌ Nenhum ingrediente encontrado no Firebase")
         
         if st.session_state.demo_ingredients:
             # Debug: Mostrar estrutura dos dados
