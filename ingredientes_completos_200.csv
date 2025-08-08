@@ -1,0 +1,199 @@
+Nome,Categoria,Preco,Unid_Receita,Unid_Compra,Kcal_Unid,Fator_Conv,Ativo,Observacoes
+Frango peito sem pele,Proteina Animal,32.90,g,kg,1.65,1000,TRUE,Sem pele sem osso
+Carne bovina alcatra,Proteina Animal,48.90,g,kg,1.92,1000,TRUE,Corte nobre
+Carne bovina patinho,Proteina Animal,42.90,g,kg,1.78,1000,TRUE,Corte magro
+Carne bovina contrafile,Proteina Animal,56.90,g,kg,2.50,1000,TRUE,Corte premium
+Carne suina lombo,Proteina Animal,38.90,g,kg,2.63,1000,TRUE,Corte magro
+Tilapia file,Proteina Animal,45.90,g,kg,0.96,1000,TRUE,Peixe de cultivo
+Salmao file,Proteina Animal,89.90,g,kg,2.08,1000,TRUE,Rico em omega 3
+Sardinha fresca,Proteina Animal,28.90,g,kg,2.08,1000,TRUE,Peixe azul
+Camarao limpo,Proteina Animal,78.90,g,kg,0.91,1000,TRUE,Sem casca
+Ovo de galinha,Proteina Animal,18.90,unidade,cartela,1.55,12,TRUE,Tipo extra grande
+Queijo mussarela,Proteina Animal,48.90,g,kg,2.80,1000,TRUE,Fatia
+Queijo ricota,Proteina Animal,32.90,g,kg,1.74,1000,TRUE,Fresca
+Iogurte natural,Proteina Animal,12.90,g,pote,0.51,500,TRUE,Sem acucar
+Leite integral,Proteina Animal,5.89,ml,L,0.64,1000,TRUE,Tipo A
+Arroz branco agulhinha,Carboidrato,6.90,g,kg,1.28,1000,TRUE,Tipo 1 longo
+Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Graos inteiros
+Macarrao espaguete,Carboidrato,7.49,g,kg,3.71,1000,TRUE,Grano duro
+Macarrao integral,Carboidrato,12.90,g,kg,3.24,1000,TRUE,Rico em fibras
+Batata inglesa,Carboidrato,7.49,g,kg,0.87,1000,TRUE,Lavada
+Batata doce,Carboidrato,6.90,g,kg,1.18,1000,TRUE,Roxa ou branca
+Mandioca,Carboidrato,4.90,g,kg,1.25,1000,TRUE,Descascada
+Inhame,Carboidrato,8.90,g,kg,0.97,1000,TRUE,Cozido
+Quinoa em graos,Carboidrato,28.90,g,kg,3.68,1000,TRUE,Superalimento
+Aveia em flocos,Carboidrato,12.90,g,kg,3.94,1000,TRUE,Integral
+Granola tradicional,Carboidrato,18.90,g,kg,4.71,1000,TRUE,Com frutas secas
+Pao frances,Carboidrato,12.90,g,kg,3.00,1000,TRUE,Tradicional
+Pao integral,Carboidrato,16.90,g,kg,2.53,1000,TRUE,Com graos
+Farinha de trigo,Carboidrato,4.90,g,kg,3.64,1000,TRUE,Tipo 1
+Farinha de mandioca,Carboidrato,8.90,g,kg,3.65,1000,TRUE,Torrada
+Fuba de milho,Carboidrato,6.90,g,kg,3.65,1000,TRUE,Fino
+Polvilho doce,Carboidrato,9.90,g,kg,3.47,1000,TRUE,Para tapioca
+Tomate cereja,Vegetal,12.90,g,kg,0.18,1000,TRUE,Doce
+Tomate carmem,Vegetal,8.90,g,kg,0.15,1000,TRUE,Para salada
+Cebola branca,Vegetal,9.90,g,kg,0.47,1000,TRUE,Nacional
+Cebola roxa,Vegetal,11.90,g,kg,0.42,1000,TRUE,Para tempero
+Alho nacional,Tempero,28.90,g,kg,1.13,1000,TRUE,Roxo miudo
+Gengibre fresco,Tempero,18.90,g,kg,0.22,1000,TRUE,Raiz
+Cenoura,Vegetal,6.90,g,kg,0.43,1000,TRUE,Lavada
+Beterraba,Vegetal,7.90,g,kg,0.32,1000,TRUE,Sem folhas
+Abobrinha italiana,Vegetal,8.90,g,kg,0.20,1000,TRUE,Verde
+Berinjela,Vegetal,9.90,g,kg,0.27,1000,TRUE,Roxa
+Pimentao verde,Vegetal,11.90,g,kg,0.30,1000,TRUE,Doce
+Pimentao vermelho,Vegetal,14.90,g,kg,0.30,1000,TRUE,Doce
+Pimentao amarelo,Vegetal,16.90,g,kg,0.30,1000,TRUE,Doce
+Brocolis,Vegetal,12.90,g,kg,0.25,1000,TRUE,Ramoso
+Couve-flor,Vegetal,11.90,g,kg,0.27,1000,TRUE,Branca
+Repolho verde,Vegetal,4.90,g,kg,0.27,1000,TRUE,Liso
+Repolho roxo,Vegetal,7.90,g,kg,0.31,1000,TRUE,Crespo
+Acelga,Folha,8.90,g,maco,0.17,5,TRUE,Fresca
+Alface americana,Folha,4.90,g,pe,0.11,1,TRUE,Crespa
+Alface lisa,Folha,3.90,g,pe,0.08,1,TRUE,Verde
+Rucula,Folha,6.90,g,maco,0.18,3,TRUE,Fresca
+Espinafre,Folha,7.90,g,maco,0.16,5,TRUE,Baby
+Couve manteiga,Folha,3.90,g,maco,0.29,5,TRUE,Mineira
+Agriao,Folha,5.90,g,maco,0.20,3,TRUE,Fresco
+Salsa,Tempero,3.90,g,maco,0.43,2,TRUE,Lisa
+Cebolinha verde,Tempero,3.90,g,maco,0.23,2,TRUE,Fresca
+Coentro,Tempero,3.90,g,maco,0.26,2,TRUE,Fresco
+Manjericao,Tempero,8.90,g,maco,0.48,1,TRUE,Fresco
+Hortelao,Tempero,6.90,g,maco,0.43,1,TRUE,Fresco
+Oregano fresco,Tempero,12.90,g,maco,0.79,1,TRUE,Fresco
+Alecrim fresco,Tempero,9.90,g,maco,1.31,1,TRUE,Fresco
+Banana prata,Fruta,6.90,g,kg,0.92,1000,TRUE,Madura
+Banana nanica,Fruta,5.90,g,kg,0.87,1000,TRUE,Verde ou madura
+Maca fuji,Fruta,12.90,g,kg,0.56,1000,TRUE,Nacional
+Maca verde,Fruta,14.90,g,kg,0.58,1000,TRUE,Granny smith
+Laranja pera,Fruta,7.90,g,kg,0.51,1000,TRUE,Doce
+Laranja lima,Fruta,8.90,g,kg,0.46,1000,TRUE,Mesa
+Limao tahiti,Fruta,9.90,g,kg,0.22,1000,TRUE,Verde
+Limao siciliano,Fruta,12.90,g,kg,0.17,1000,TRUE,Amarelo
+Abacaxi perola,Fruta,6.90,g,kg,0.48,1000,TRUE,Doce
+Melancia,Fruta,3.90,g,kg,0.33,1000,TRUE,Grauda
+Melao,Fruta,4.90,g,kg,0.22,1000,TRUE,Amarelo
+Mamao papaya,Fruta,8.90,g,kg,0.32,1000,TRUE,Pequeno
+Manga palmer,Fruta,9.90,g,kg,0.67,1000,TRUE,Grande
+Uva niagara,Fruta,14.90,g,kg,0.69,1000,TRUE,Roxa
+Uva italia,Fruta,18.90,g,kg,0.69,1000,TRUE,Branca
+Morango,Fruta,19.90,g,kg,0.30,1000,TRUE,Fresco
+Kiwi,Fruta,24.90,g,kg,0.51,1000,TRUE,Importado
+Pera williams,Fruta,16.90,g,kg,0.53,1000,TRUE,Argentina
+Pessego,Fruta,18.90,g,kg,0.36,1000,TRUE,Nacional
+Ameixa vermelha,Fruta,22.90,g,kg,0.53,1000,TRUE,Nacional
+Coco verde,Fruta,4.90,g,unidade,3.54,1,TRUE,Agua de coco
+Abacate,Fruta,12.90,g,kg,0.96,1000,TRUE,Maranhao
+Feijao carioca,Leguminosa,8.90,g,kg,0.76,1000,TRUE,Tipo 1
+Feijao preto,Leguminosa,9.90,g,kg,0.77,1000,TRUE,Tipo 1
+Feijao fradinho,Leguminosa,12.90,g,kg,1.08,1000,TRUE,Macassar
+Lentilha,Leguminosa,16.90,g,kg,1.08,1000,TRUE,Seca
+Grao de bico,Leguminosa,18.90,g,kg,1.64,1000,TRUE,Seco
+Ervilha seca,Leguminosa,14.90,g,kg,3.04,1000,TRUE,Partida
+Soja em graos,Leguminosa,12.90,g,kg,4.46,1000,TRUE,Seca
+Amendoim torrado,Oleaginosa,24.90,g,kg,6.15,1000,TRUE,Com pele
+Castanha do para,Oleaginosa,89.90,g,kg,6.56,1000,TRUE,Crua
+Castanha de caju,Oleaginosa,78.90,g,kg,5.53,1000,TRUE,Torrada
+Nozes,Oleaginosa,124.90,g,kg,6.54,1000,TRUE,Sem casca
+Amandoas,Oleaginosa,98.90,g,kg,5.79,1000,TRUE,Sem casca
+Pistache,Oleaginosa,189.90,g,kg,5.62,1000,TRUE,Torrado
+Macadamia,Oleaginosa,156.90,g,kg,7.18,1000,TRUE,Torrada
+Avelaa,Oleaginosa,134.90,g,kg,6.28,1000,TRUE,Torrada
+Sementes de girassol,Oleaginosa,18.90,g,kg,5.84,1000,TRUE,Sem casca
+Sementes de abobora,Oleaginosa,32.90,g,kg,5.59,1000,TRUE,Torradas
+Azeite extra virgem,Gordura,28.90,ml,L,8.84,1000,TRUE,Primeira prensagem
+Oleo de soja,Gordura,8.90,ml,L,8.84,1000,TRUE,Refinado
+Oleo de canola,Gordura,14.90,ml,L,8.84,1000,TRUE,Extra virgem
+Oleo de coco,Gordura,32.90,ml,L,8.62,1000,TRUE,Extra virgem
+Oleo de oliva,Gordura,24.90,ml,L,8.84,1000,TRUE,Puro
+Manteiga sem sal,Gordura,28.90,g,kg,7.17,1000,TRUE,Primeira qualidade
+Manteiga com sal,Gordura,26.90,g,kg,7.17,1000,TRUE,Tradicional
+Margarina,Gordura,12.90,g,kg,5.96,1000,TRUE,Com sal
+Creme de leite,Gordura,8.90,g,caixa,2.92,200,TRUE,Fresco
+Leite condensado,Doce,12.90,g,lata,3.21,395,TRUE,Moca
+Acucar cristal,Doce,4.90,g,kg,3.87,1000,TRUE,Refinado especial
+Acucar demerara,Doce,8.90,g,kg,3.76,1000,TRUE,Organico
+Acucar mascavo,Doce,12.90,g,kg,3.77,1000,TRUE,Integral
+Mel de abelha,Doce,28.90,g,pote,3.04,500,TRUE,Puro
+Melado de cana,Doce,18.90,g,pote,2.98,330,TRUE,Integral
+Chocolate em po,Doce,24.90,g,lata,4.28,400,TRUE,50% cacau
+Cacau em po,Doce,48.90,g,lata,2.28,200,TRUE,100% puro
+Cafe em po,Bebida,28.90,g,pacote,0.01,500,TRUE,Torrado moido
+Cha verde,Bebida,18.90,g,caixa,0.00,25,TRUE,Importado
+Cha de camomila,Bebida,12.90,g,caixa,0.00,15,TRUE,Natural
+Agua mineral,Bebida,3.90,ml,garrafa,0.00,1500,TRUE,Sem gas
+Agua com gas,Bebida,4.90,ml,garrafa,0.00,1500,TRUE,Natural
+Sal refinado,Tempero,1.99,g,kg,0.00,1000,TRUE,Iodado
+Sal grosso,Tempero,2.49,g,kg,0.00,1000,TRUE,Para churrasco
+Sal rosa himalaia,Tempero,28.90,g,pote,0.00,500,TRUE,Fino
+Pimenta do reino preta,Tempero,32.90,g,pote,2.51,100,TRUE,Moida
+Pimenta do reino branca,Tempero,48.90,g,pote,2.96,100,TRUE,Moida
+Pimenta calabresa,Tempero,12.90,g,pote,3.18,50,TRUE,Picante
+Cominho em po,Tempero,18.90,g,pote,3.75,40,TRUE,Moido
+Canela em po,Tempero,24.90,g,pote,2.47,30,TRUE,Do ceylao
+Cravo da india,Tempero,38.90,g,pote,2.74,20,TRUE,Inteiro
+Noz moscada,Tempero,42.90,g,pote,5.25,15,TRUE,Ralada
+Açafrão da terra,Tempero,16.90,g,pote,3.12,50,TRUE,Curcuma
+Curry em po,Tempero,28.90,g,pote,3.25,40,TRUE,Suave
+Paprica doce,Tempero,22.90,g,pote,2.82,50,TRUE,Importada
+Oregano seco,Tempero,12.90,g,pote,3.06,20,TRUE,Folhas
+Manjericao seco,Tempero,18.90,g,pote,2.33,15,TRUE,Folhas
+Alecrim seco,Tempero,14.90,g,pote,1.31,25,TRUE,Folhas
+Tomilho seco,Tempero,24.90,g,pote,2.76,15,TRUE,Folhas
+Louro seco,Tempero,8.90,g,pote,3.13,10,TRUE,Folhas inteiras
+Vinagre de vinho tinto,Condimento,12.90,ml,garrafa,0.19,500,TRUE,Envelhecido
+Vinagre de vinho branco,Condimento,11.90,ml,garrafa,0.22,500,TRUE,Suave
+Vinagre balsamico,Condimento,28.90,ml,garrafa,0.88,250,TRUE,Modena
+Vinagre de maca,Condimento,18.90,ml,garrafa,0.22,500,TRUE,Organico
+Molho de soja shoyu,Condimento,12.90,ml,garrafa,0.60,150,TRUE,Tradicional
+Molho ingles,Condimento,16.90,ml,garrafa,0.78,150,TRUE,Worcestershire
+Mostarda amarela,Condimento,8.90,g,pote,0.66,200,TRUE,Tradicional
+Ketchup,Condimento,12.90,g,pote,1.12,380,TRUE,Tradicional
+Maionese,Condimento,14.90,g,pote,6.80,500,TRUE,Tradicional
+Pesto de manjericao,Condimento,38.90,g,pote,4.89,140,TRUE,Com pinhao
+Tahine,Condimento,48.90,g,pote,5.95,200,TRUE,Pasta de gergelim
+Leite de coco,Enlatados,8.90,ml,lata,1.51,400,TRUE,Integral
+Creme de leite de coco,Enlatados,12.90,ml,lata,2.30,200,TRUE,Para doces
+Tomate pelado,Enlatados,6.90,g,lata,0.18,400,TRUE,San marzano
+Extrato de tomate,Enlatados,4.90,g,lata,0.82,130,TRUE,Concentrado
+Molho de tomate,Enlatados,3.90,g,lata,0.37,340,TRUE,Tradicional
+Milho verde,Enlatados,4.90,g,lata,0.96,200,TRUE,Em conserva
+Ervilha em conserva,Enlatados,5.90,g,lata,0.63,200,TRUE,Verde
+Azeitona verde,Enlatados,12.90,g,pote,1.25,200,TRUE,Sem caroco
+Azeitona preta,Enlatados,14.90,g,pote,1.15,160,TRUE,Sem caroco
+Palmito pupunha,Enlatados,18.90,g,pote,0.26,300,TRUE,Em conserva
+Cogumelo paris,Enlatados,22.90,g,lata,0.35,200,TRUE,Em conserva
+Atum em lata,Enlatados,12.90,g,lata,1.32,170,TRUE,Em agua
+Sardinha em lata,Enlatados,6.90,g,lata,2.08,125,TRUE,Em oleo
+Salmao em lata,Enlatados,28.90,g,lata,1.42,200,TRUE,Natural
+Leite em po integral,Lacteos,28.90,g,lata,4.96,400,TRUE,Instantaneo
+Leite em po desnatado,Lacteos,32.90,g,lata,3.62,400,TRUE,0% gordura
+Queijo parmesao ralado,Lacteos,38.90,g,pote,4.31,100,TRUE,Importado
+Queijo cheddar,Lacteos,42.90,g,kg,4.03,1000,TRUE,Processado
+Queijo gouda,Lacteos,56.90,g,kg,3.56,1000,TRUE,Holandes
+Queijo brie,Lacteos,78.90,g,kg,3.34,1000,TRUE,Frances
+Requeijao cremoso,Lacteos,18.90,g,pote,2.64,200,TRUE,Tradicional
+Creme de ricota,Lacteos,22.90,g,pote,1.74,150,TRUE,Light
+Iogurte grego,Lacteos,18.90,g,pote,0.97,170,TRUE,Natural
+Kefir,Lacteos,16.90,ml,garrafa,0.37,500,TRUE,Probiotico
+Farinha de rosca,Outros,8.90,g,pacote,3.57,500,TRUE,Temperada
+Farinha de milho,Outros,6.90,g,kg,3.61,1000,TRUE,Flocada
+Amido de milho,Outros,9.90,g,caixa,3.81,200,TRUE,Maizena
+Fermento biologico,Outros,4.90,g,cubo,0.53,15,TRUE,Fresco
+Fermento quimico,Outros,6.90,g,pote,1.63,100,TRUE,Royal
+Bicarbonato de sodio,Outros,8.90,g,pote,0.00,500,TRUE,Alimenticio
+Gelatina incolor,Outros,4.90,g,envelope,3.38,12,TRUE,Sem sabor
+Agar agar,Outros,48.90,g,pote,3.06,50,TRUE,Vegetal
+Lecitina de soja,Outros,32.90,g,pote,7.63,200,TRUE,Granulada
+Proteina de soja,Outros,28.90,g,pacote,3.45,400,TRUE,Texturizada
+Gluten,Outros,24.90,g,pacote,3.70,500,TRUE,Vital
+Farelo de trigo,Outros,12.90,g,kg,2.46,1000,TRUE,Fino
+Germe de trigo,Outros,18.90,g,pote,3.60,200,TRUE,Torrado
+Farinha de centeio,Outros,16.90,g,kg,3.35,1000,TRUE,Integral
+Farinha de cevada,Outros,14.90,g,kg,3.54,1000,TRUE,Integral
+Farinha de aveia,Outros,22.90,g,kg,4.05,1000,TRUE,Sem gluten
+Farinha de amendoa,Outros,124.90,g,kg,5.75,1000,TRUE,Desengordurada
+Farinha de coco,Outros,38.90,g,pacote,6.60,200,TRUE,Desengordurada
+Chia,Outros,48.90,g,pacote,4.86,200,TRUE,Preta
+Linhaca dourada,Outros,18.90,g,pacote,4.95,200,TRUE,Moida
+Sesamo branco,Outros,28.90,g,pote,5.73,200,TRUE,Gergelim
+Polvilho azedo,Outros,12.90,g,kg,3.48,1000,TRUE,Para pao de queijo

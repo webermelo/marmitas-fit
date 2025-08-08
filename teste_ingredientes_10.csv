@@ -1,0 +1,11 @@
+Nome,Categoria,Preco,Unid_Receita,Unid_Compra,Kcal_Unid,Fator_Conv,Ativo,Observacoes
+Frango peito,Proteina Animal,32.90,g,kg,1.65,1000,TRUE,Sem pele sem osso
+Carne bovina alcatra,Proteina Animal,48.90,g,kg,1.92,1000,TRUE,Corte nobre
+Arroz branco,Carboidrato,6.90,g,kg,1.28,1000,TRUE,Tipo 1 longo
+Arroz integral,Carboidrato,8.90,g,kg,1.11,1000,TRUE,Graos inteiros
+Batata inglesa,Carboidrato,7.49,g,kg,0.87,1000,TRUE,Lavada
+Tomate carmem,Vegetal,8.90,g,kg,0.15,1000,TRUE,Para salada
+Cebola branca,Vegetal,9.90,g,kg,0.47,1000,TRUE,Nacional
+Alface americana,Folha,4.90,g,pe,0.11,1,TRUE,Crespa
+Azeite extra virgem,Gordura,28.90,ml,L,8.84,1000,TRUE,Primeira prensagem
+Sal refinado,Tempero,1.99,g,kg,0.00,1000,TRUE,Iodado

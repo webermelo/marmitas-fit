@@ -241,6 +241,18 @@ def upload_ingredientes_safe():
             
             st.write(f"📊 **Total de registros:** {len(df)}")
             
+            # Debug: Mostrar informações sobre o DataFrame
+            with st.expander("🔍 Debug - Informações do arquivo"):
+                st.write("**Colunas encontradas:**")
+                st.write(list(df.columns))
+                st.write("**Tipos de dados:**")
+                st.write(df.dtypes)
+                st.write("**Primeiras 3 linhas (raw):**")
+                for i in range(min(3, len(df))):
+                    st.write(f"Linha {i}: {df.iloc[i].to_dict()}")
+                st.write("**Valores únicos na coluna 'Nome' (primeiros 10):**")
+                st.write(df['Nome'].dropna().head(10).tolist())
+            
             # Validar colunas obrigatórias
             required_columns = ['Nome', 'Categoria', 'Preco', 'Unid_Receita', 'Unid_Compra', 'Kcal_Unid', 'Fator_Conv', 'Ativo']
             missing_columns = [col for col in required_columns if col not in df.columns]
@@ -451,35 +463,78 @@ def validate_receitas_data(df):
     return errors[:10]
 
 def save_ingredientes_to_session(df):
-    """Salva ingredientes no session state (versão demo)"""
+    """Salva ingredientes no session state (versão demo) - CORRIGIDO"""
     try:
-        if 'demo_ingredients' not in st.session_state:
-            st.session_state.demo_ingredients = []
+        # Limpar ingredientes existentes para evitar duplicatas
+        st.session_state.demo_ingredients = []
         
         success_count = 0
+        failed_rows = []
         
-        for _, row in df.iterrows():
-            ingredient_data = {
-                'id': f"upload_{len(st.session_state.demo_ingredients)}_{success_count}",
-                'nome': str(row['Nome']).strip(),
-                'categoria': str(row['Categoria']).strip(),
-                'preco': float(row['Preco']),
-                'unid_receita': str(row['Unid_Receita']).strip(),
-                'unid_compra': str(row['Unid_Compra']).strip(),
-                'kcal_unid': float(row['Kcal_Unid']),
-                'fator_conv': float(row['Fator_Conv']),
-                'ativo': str(row['Ativo']).upper() == 'TRUE',
-                'observacoes': str(row.get('Observacoes', '')).strip(),
-                'source': 'upload_csv'
-            }
-            
-            st.session_state.demo_ingredients.append(ingredient_data)
-            success_count += 1
+        for idx, row in df.iterrows():
+            try:
+                # Validar dados linha por linha
+                nome = str(row['Nome']).strip() if pd.notna(row['Nome']) else ''
+                categoria = str(row['Categoria']).strip() if pd.notna(row['Categoria']) else ''
+                
+                # Pular linhas vazias
+                if not nome or nome.lower() == 'nan' or not categoria or categoria.lower() == 'nan':
+                    continue
+                
+                # Converter preço com tratamento de erro
+                try:
+                    preco = float(row['Preco']) if pd.notna(row['Preco']) else 0.0
+                except:
+                    preco = 0.0
+                
+                # Converter calorias com tratamento de erro
+                try:
+                    kcal_unid = float(row['Kcal_Unid']) if pd.notna(row['Kcal_Unid']) else 0.0
+                except:
+                    kcal_unid = 0.0
+                
+                # Converter fator de conversão
+                try:
+                    fator_conv = float(row['Fator_Conv']) if pd.notna(row['Fator_Conv']) else 1.0
+                except:
+                    fator_conv = 1.0
+                
+                ingredient_data = {
+                    'id': f"upload_{success_count}_{idx}",
+                    'Nome': nome,
+                    'Categoria': categoria,
+                    'Preco_Padrao': preco,
+                    'Unidade_Receita': str(row['Unid_Receita']).strip() if pd.notna(row['Unid_Receita']) else 'g',
+                    'Unidade_Compra': str(row['Unid_Compra']).strip() if pd.notna(row['Unid_Compra']) else 'kg',
+                    'Kcal_Por_Unidade_Receita': kcal_unid,
+                    'Fator_Conversao': fator_conv,
+                    'Ativo': str(row['Ativo']).upper() == 'TRUE' if pd.notna(row['Ativo']) else True,
+                    'Observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else '',
+                    'source': 'upload_csv',
+                    'created_at': pd.Timestamp.now().isoformat()
+                }
+                
+                st.session_state.demo_ingredients.append(ingredient_data)
+                success_count += 1
+                
+            except Exception as row_error:
+                failed_rows.append(f"Linha {idx+2}: {str(row_error)}")
+                continue
+        
+        # Mostrar erros se houver
+        if failed_rows:
+            st.warning("⚠️ Algumas linhas não puderam ser importadas:")
+            for error in failed_rows[:5]:  # Mostrar apenas os primeiros 5 erros
+                st.write(f"- {error}")
+            if len(failed_rows) > 5:
+                st.write(f"... e mais {len(failed_rows)-5} erros")
         
         return success_count
         
     except Exception as e:
-        st.error(f"Erro ao salvar ingredientes: {str(e)}")
+        st.error(f"Erro geral no upload: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
         return 0
 
 def save_embalagens_to_session(df):
