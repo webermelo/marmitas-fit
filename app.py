@@ -349,23 +349,29 @@ def show_simple_auth():
 # Inicializar dados demo
 def init_demo_data():
     """Inicializa dados demo ou carrega do Firebase"""
-    if 'demo_ingredients' not in st.session_state:
-        # Tentar carregar do Firebase primeiro
+    # SEMPRE tentar carregar do Firebase se usuário logado
+    if 'user' in st.session_state and FIREBASE_AVAILABLE:
+        logger.info(f"Usuário logado detectado: {st.session_state.user.get('email')} - carregando dados do Firebase")
+        
+        # Carregar ingredientes
         firebase_ingredients = load_ingredients_from_firebase()
-        if firebase_ingredients:
-            st.session_state.demo_ingredients = firebase_ingredients
-        else:
-            # Fallback para dados demo se Firebase não disponível
-            st.session_state.demo_ingredients = []
-    
-    if 'demo_recipes' not in st.session_state:
-        # Tentar carregar do Firebase primeiro
+        st.session_state.demo_ingredients = firebase_ingredients
+        logger.info(f"Carregados {len(firebase_ingredients)} ingredientes do Firebase")
+        
+        # Carregar receitas  
         firebase_recipes = load_recipes_from_firebase()
-        if firebase_recipes:
-            st.session_state.demo_recipes = firebase_recipes
-        else:
-            # Fallback para dados demo se Firebase não disponível
+        st.session_state.demo_recipes = firebase_recipes
+        logger.info(f"Carregadas {len(firebase_recipes)} receitas do Firebase")
+        
+    else:
+        # Fallback: inicializar vazio se não há usuário ou Firebase
+        if 'demo_ingredients' not in st.session_state:
+            st.session_state.demo_ingredients = []
+            logger.debug("Inicializado ingredientes vazio (sem usuário/Firebase)")
+        
+        if 'demo_recipes' not in st.session_state:
             st.session_state.demo_recipes = []
+            logger.debug("Inicializado receitas vazio (sem usuário/Firebase)")
 
 def load_ingredients_from_firebase():
     """Carrega ingredientes do Firebase"""

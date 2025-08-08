@@ -562,13 +562,18 @@ def validate_receitas_data(df):
     return errors[:10]
 
 def save_ingredientes_to_session(df):
-    """Salva ingredientes no session state (versão demo) - CORRIGIDO"""
+    """Salva ingredientes no session state E Firebase - VERSÃO COMPLETA"""
     try:
         # Limpar ingredientes existentes para evitar duplicatas
         st.session_state.demo_ingredients = []
         
         success_count = 0
+        firebase_success_count = 0
         failed_rows = []
+        
+        # PASSO 1: Limpar todos os ingredientes antigos do Firebase se for admin
+        if 'user' in st.session_state:
+            clear_all_user_ingredients_from_firebase()
         
         for idx, row in df.iterrows():
             try:
@@ -598,7 +603,8 @@ def save_ingredientes_to_session(df):
                 except:
                     fator_conv = 1.0
                 
-                ingredient_data = {
+                # Estrutura para session state (compatibilidade com código antigo)
+                ingredient_data_old = {
                     'Nome': nome,
                     'Categoria': categoria,
                     'Unidade_Receita': str(row['Unid_Receita']).strip() if pd.notna(row['Unid_Receita']) else 'g',
@@ -610,12 +616,42 @@ def save_ingredientes_to_session(df):
                     'Observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else ''
                 }
                 
-                st.session_state.demo_ingredients.append(ingredient_data)
+                # Estrutura nova para Firebase (padronizada)
+                ingredient_data_new = {
+                    'nome': nome,
+                    'categoria': categoria,
+                    'unid_receita': str(row['Unid_Receita']).strip() if pd.notna(row['Unid_Receita']) else 'g',
+                    'unid_compra': str(row['Unid_Compra']).strip() if pd.notna(row['Unid_Compra']) else 'kg',
+                    'preco': preco,
+                    'kcal_unid': kcal_unid,
+                    'fator_conv': fator_conv,
+                    'ativo': str(row['Ativo']).upper() == 'TRUE' if pd.notna(row['Ativo']) else True,
+                    'observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else ''
+                }
+                
+                # Salvar no session state
+                st.session_state.demo_ingredients.append(ingredient_data_new)
                 success_count += 1
+                
+                # SALVAR NO FIREBASE
+                try:
+                    from app import save_ingredient_to_firebase  # Import da função principal
+                    if save_ingredient_to_firebase(ingredient_data_new):
+                        firebase_success_count += 1
+                except Exception as firebase_error:
+                    st.warning(f"Ingrediente '{nome}' salvo localmente, mas erro no Firebase: {firebase_error}")
+                    pass  # Continuar mesmo se Firebase falhar
                 
             except Exception as row_error:
                 failed_rows.append(f"Linha {idx+2}: {str(row_error)}")
                 continue
+        
+        # Mostrar resultados
+        if firebase_success_count > 0:
+            st.success(f"🔥 {firebase_success_count} ingredientes salvos no Firebase!")
+            st.success(f"💾 {success_count} ingredientes salvos localmente!")
+        else:
+            st.warning(f"💾 {success_count} ingredientes salvos apenas localmente (Firebase indisponível)")
         
         # Mostrar erros se houver
         if failed_rows:
@@ -632,6 +668,46 @@ def save_ingredientes_to_session(df):
         import traceback
         st.code(traceback.format_exc())
         return 0
+
+def clear_all_user_ingredients_from_firebase():
+    """Remove todos os ingredientes do usuário do Firebase antes de upload"""
+    try:
+        if 'user' not in st.session_state:
+            return False
+            
+        from utils.firestore_client import get_firestore_client
+        import requests
+        
+        db = get_firestore_client()
+        if db and 'token' in st.session_state.user:
+            db.set_auth_token(st.session_state.user['token'])
+            
+            user_id = st.session_state.user['uid']
+            collection_path = f'users/{user_id}/ingredients'
+            
+            # URL para listar documentos
+            url = f"{db.base_url}/{collection_path}"
+            response = requests.get(url, headers=db._get_headers())
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'documents' in data:
+                    # Deletar cada documento encontrado
+                    deleted_count = 0
+                    for doc in data['documents']:
+                        doc_path = doc['name']  # Caminho completo do documento
+                        delete_response = requests.delete(doc_path, headers=db._get_headers())
+                        if delete_response.status_code in [200, 204]:
+                            deleted_count += 1
+                    
+                    print(f"DEBUG: Removidos {deleted_count} ingredientes antigos do Firebase")
+                    return True
+            
+    except Exception as e:
+        print(f"DEBUG: Erro ao limpar ingredientes antigos: {e}")
+        pass  # Não falhar o upload por causa disso
+    
+    return False
 
 def save_embalagens_to_session(df):
     """Salva embalagens no session state (versão demo)"""
