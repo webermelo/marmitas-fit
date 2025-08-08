@@ -633,14 +633,17 @@ def save_ingredientes_to_session(df):
                 st.session_state.demo_ingredients.append(ingredient_data_new)
                 success_count += 1
                 
-                # SALVAR NO FIREBASE
+                # SALVAR NO FIREBASE (SEM IMPORT CIRCULAR)
                 try:
-                    from app import save_ingredient_to_firebase  # Import da função principal
-                    if save_ingredient_to_firebase(ingredient_data_new):
+                    if save_ingredient_to_firebase_direct(ingredient_data_new):
                         firebase_success_count += 1
+                        st.success(f"🔥 '{nome}' salvo no Firebase!")
+                    else:
+                        st.error(f"❌ Falha ao salvar '{nome}' no Firebase")
                 except Exception as firebase_error:
-                    st.warning(f"Ingrediente '{nome}' salvo localmente, mas erro no Firebase: {firebase_error}")
-                    pass  # Continuar mesmo se Firebase falhar
+                    st.error(f"❌ ERRO FIREBASE '{nome}': {firebase_error}")
+                    st.code(str(firebase_error))  # Mostrar erro completo
+                    # NÃO usar pass - queremos ver os erros!
                 
             except Exception as row_error:
                 failed_rows.append(f"Linha {idx+2}: {str(row_error)}")
@@ -668,6 +671,66 @@ def save_ingredientes_to_session(df):
         import traceback
         st.code(traceback.format_exc())
         return 0
+
+def save_ingredient_to_firebase_direct(ingredient):
+    """Salva ingrediente diretamente no Firebase SEM import circular"""
+    
+    # Verificar se usuário está logado
+    if 'user' not in st.session_state:
+        st.error("❌ Usuário não logado")
+        return False
+    
+    try:
+        # Import direto do cliente
+        from utils.firestore_client import get_firestore_client
+        
+        # Obter cliente Firestore
+        db = get_firestore_client()
+        if not db:
+            st.error("❌ Cliente Firestore não inicializado")
+            return False
+        
+        # Verificar e configurar token
+        if 'token' not in st.session_state.user or not st.session_state.user['token']:
+            st.error("❌ Token de autenticação não encontrado")
+            return False
+        
+        # Configurar autenticação
+        token = st.session_state.user['token']
+        db.set_auth_token(token)
+        st.info(f"🔑 Token configurado: {token[:20]}...")
+        
+        # Preparar dados
+        user_id = st.session_state.user['uid']
+        collection_path = f'users/{user_id}/ingredients'
+        
+        # Dados completos para Firebase
+        ingredient_data = ingredient.copy()
+        ingredient_data['user_id'] = user_id
+        ingredient_data['created_at'] = datetime.now().isoformat()
+        
+        st.info(f"📍 Salvando em: {collection_path}")
+        st.info(f"📋 Item: {ingredient_data.get('nome', 'N/A')} - {ingredient_data.get('categoria', 'N/A')}")
+        
+        # Salvar no Firebase via REST API
+        result = db.collection(collection_path).add(ingredient_data)
+        
+        if result:
+            st.success(f"✅ Firebase: '{ingredient_data.get('nome', 'N/A')}' salvo com sucesso!")
+            return True
+        else:
+            st.error("❌ Firebase: Falha na resposta (resultado vazio)")
+            return False
+            
+    except Exception as e:
+        st.error(f"❌ EXCEÇÃO no save Firebase: {str(e)}")
+        
+        # Mostrar stack trace completo para debug
+        import traceback
+        error_details = traceback.format_exc()
+        st.code(f"Stack trace:\n{error_details}")
+        
+        return False
 
 def clear_all_user_ingredients_from_firebase():
     """Remove todos os ingredientes do usuário do Firebase antes de upload"""
