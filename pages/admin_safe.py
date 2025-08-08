@@ -40,18 +40,17 @@ def show_admin_page():
     st.success(f"🔓 Acesso autorizado: {user_email}")
     
     # Tabs principais
-    tab1, tab2, tab3, tab4 = st.tabs(["📥 Templates", "📤 Uploads", "🧹 Limpeza", "📊 Estatísticas"])
+    tab1, tab2, tab3 = st.tabs(["📥 Templates", "📤 Uploads & Limpeza", "📊 Estatísticas"])
     
     with tab1:
         show_templates_safe()
     
     with tab2:
         show_uploads_safe()
-    
-    with tab3:
+        st.markdown("---")
         show_cleanup_tools()
     
-    with tab4:
+    with tab3:
         show_stats_safe()
 
 def show_templates_safe():
@@ -220,6 +219,55 @@ def show_uploads_safe():
     
     with tab4:
         upload_receitas_safe()
+    
+    # Seção de emergência para limpeza rápida
+    st.markdown("---")
+    st.subheader("🚨 Limpeza Rápida de Emergência")
+    
+    total_ingredients = len(st.session_state.get('demo_ingredients', []))
+    if total_ingredients > 10:
+        st.error(f"⚠️ Detectados {total_ingredients} ingredientes (possível duplicação!)")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🗑️ LIMPAR DUPLICATAS AGORA", key="emergency_cleanup", type="primary"):
+                if st.session_state.get('demo_ingredients'):
+                    ingredientes_unicos = []
+                    nomes_vistos = set()
+                    
+                    for ing in st.session_state.demo_ingredients:
+                        nome = ing.get('Nome', '')
+                        if nome and nome not in nomes_vistos and str(nome).lower() not in ['none', 'nan', '']:
+                            # Garantir estrutura correta
+                            ingrediente_limpo = {
+                                'Nome': nome,
+                                'Categoria': ing.get('Categoria', 'Outros'),
+                                'Unidade_Receita': ing.get('Unidade_Receita', 'g'),
+                                'Unidade_Compra': ing.get('Unidade_Compra', 'kg'),
+                                'Preco_Padrao': float(ing.get('Preco_Padrao', 0)),
+                                'Kcal_Por_Unidade_Receita': float(ing.get('Kcal_Por_Unidade_Receita', 0)),
+                                'Fator_Conversao': float(ing.get('Fator_Conversao', 1000))
+                            }
+                            ingredientes_unicos.append(ingrediente_limpo)
+                            nomes_vistos.add(nome)
+                    
+                    st.session_state.demo_ingredients = ingredientes_unicos
+                    st.success(f"✅ LIMPEZA CONCLUÍDA! {len(ingredientes_unicos)} ingredientes únicos mantidos.")
+                    st.balloons()
+                    st.rerun()
+        
+        with col2:
+            if st.button("🔄 RESETAR TUDO", key="emergency_reset"):
+                st.session_state.demo_ingredients = [
+                    {'Nome': 'Frango (peito)', 'Categoria': 'Proteína Animal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 18.9, 'Kcal_Por_Unidade_Receita': 1.65, 'Fator_Conversao': 1000},
+                    {'Nome': 'Arroz integral', 'Categoria': 'Carboidrato', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 1.11, 'Fator_Conversao': 1000},
+                    {'Nome': 'Brócolis', 'Categoria': 'Vegetal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 0.34, 'Fator_Conversao': 1000},
+                ]
+                st.success("✅ RESETADO! Volte aos 3 ingredientes iniciais.")
+                st.rerun()
+    else:
+        st.success(f"✅ {total_ingredients} ingredientes - quantidade normal")
 
 def upload_ingredientes_safe():
     """Upload de ingredientes CSV - versão segura"""
@@ -659,8 +707,8 @@ def parse_simple_json(json_str):
 def show_cleanup_tools():
     """Ferramentas de limpeza e manutenção dos dados"""
     
-    st.header("🧹 Limpeza e Manutenção")
-    st.warning("⚠️ Use essas ferramentas com cuidado - algumas ações são irreversíveis!")
+    st.header("🧹 Ferramentas de Limpeza")
+    st.warning("⚠️ Use essas ferramentas para corrigir problemas de dados duplicados!")
     
     # Estatísticas atuais
     st.subheader("📊 Status Atual dos Dados")
