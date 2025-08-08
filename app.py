@@ -274,7 +274,7 @@ def main():
         
         # Adicionar limpeza se há muitos ingredientes
         total_ingredients = len(st.session_state.get('demo_ingredients', []))
-        if total_ingredients > 50:
+        if total_ingredients > 250:
             menu_options.append("🧹 Limpeza de Dados")
         
         # Adicionar menu admin se usuário for administrador
@@ -340,7 +340,7 @@ def show_dashboard():
     
     # ALERTA DE EMERGÊNCIA PARA DUPLICATAS - SOLUÇÃO IMEDIATA
     total_ingredients = len(st.session_state.get('demo_ingredients', []))
-    if total_ingredients > 50:
+    if total_ingredients > 250:
         st.error(f"🚨 EMERGÊNCIA: {total_ingredients} ingredientes duplicados detectados!")
         st.warning("⚠️ Este é um problema conhecido. Use os botões abaixo para resolver AGORA:")
         
@@ -425,7 +425,7 @@ def show_ingredientes():
     
     # Alerta de emergência para muitos ingredientes
     total_ingredients = len(st.session_state.get('demo_ingredients', []))
-    if total_ingredients > 50:
+    if total_ingredients > 250:
         st.error(f"🚨 ATENÇÃO: {total_ingredients} ingredientes detectados - possível problema de duplicatas!")
         col1, col2 = st.columns(2)
         with col1:
