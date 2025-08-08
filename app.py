@@ -89,22 +89,64 @@ def check_auth():
 def save_session():
     """Salva dados da sessão para persistência"""
     if 'user' in st.session_state:
-        # Usar session state como cache persistente
-        st.session_state['saved_user'] = st.session_state.user.copy()
+        # Salvar nos query parameters (mais confiável que localStorage)
+        st.query_params["logged_in"] = "true"
+        st.query_params["user_email"] = st.session_state.user.get('email', '')
+        st.query_params["user_uid"] = st.session_state.user.get('uid', '')
+        st.query_params["user_name"] = st.session_state.user.get('display_name', '')
+        st.query_params["user_token"] = st.session_state.user.get('token', '')
+        
+        # Backup no session state  
         st.session_state['session_saved'] = True
+        st.session_state['saved_at'] = datetime.now().isoformat()
+        
+        logger.info(f"Sessão salva para: {st.session_state.user.get('email')}")
 
 def restore_saved_session():
-    """Restaura sessão salva"""
-    if 'saved_user' in st.session_state and st.session_state.get('session_saved'):
-        st.session_state.user = st.session_state.saved_user.copy()
+    """Restaura sessão salva dos query parameters"""
+    
+    # Verificar se há dados nos query parameters
+    if st.query_params.get("logged_in") == "true":
+        user_email = st.query_params.get("user_email")
+        user_uid = st.query_params.get("user_uid")
+        
+        if user_email and user_uid:
+            # Restaurar dados do usuário
+            st.session_state.user = {
+                'email': user_email,
+                'uid': user_uid,
+                'display_name': st.query_params.get("user_name", user_email.split("@")[0]),
+                'token': st.query_params.get("user_token", ""),
+                'refresh_token': st.query_params.get("user_refresh", "")
+            }
+            
+            logger.info(f"✅ Usuário restaurado dos query params: {user_email}")
+            return True
+        else:
+            logger.warning("Query params incompletos - limpando")
+            # Limpar query params inválidos
+            if "logged_in" in st.query_params:
+                del st.query_params["logged_in"]
+    
+    return False
+
 
 def clear_session():
     """Limpa sessão e dados salvos"""
+    # Limpar query parameters de login
+    login_params = ["logged_in", "user_uid", "user_email", "user_name", "user_token", "user_refresh"]
+    for key in login_params:
+        if key in st.query_params:
+            del st.query_params[key]
+    
+    # Limpar session state
     keys_to_clear = ['user', 'saved_user', 'session_saved', 'firebase_token', 
                      'demo_ingredients', 'demo_recipes', 'current_production', 'production_history']
     for key in keys_to_clear:
         if key in st.session_state:
             del st.session_state[key]
+    
+    logger.info("Sessão completamente limpa")
 
 def is_token_valid(token):
     """Verifica se token Firebase ainda é válido"""
@@ -746,11 +788,17 @@ def show_dashboard():
             st.error("❌ Firebase não disponível")
     
     with col2:
-        st.write("**Debug Session State:**")
+        st.write("**Debug Session & URL:**")
         st.write(f"Demo ingredients: {len(st.session_state.get('demo_ingredients', []))}")
         st.write(f"Demo recipes: {len(st.session_state.get('demo_recipes', []))}")
         st.write(f"Session saved: {st.session_state.get('session_saved', False)}")
-        st.write(f"User exists: {'user' in st.session_state}")
+        st.write(f"User in session: {'user' in st.session_state}")
+        
+        # Mostrar query parameters importantes
+        st.write("**Query Parameters:**")
+        st.write(f"logged_in: {st.query_params.get('logged_in', 'None')}")
+        st.write(f"user_email: {st.query_params.get('user_email', 'None')}")
+        st.write(f"user_uid: {st.query_params.get('user_uid', 'None')[:10]}...")
         
         # Botão para forçar reload dos dados
         if st.button("🔄 Forçar Reload Firebase"):
@@ -759,6 +807,10 @@ def show_dashboard():
                 st.session_state.demo_ingredients = firebase_ingredients
                 st.info(f"Carregados {len(firebase_ingredients)} ingredientes")
                 st.rerun()
+        
+        # Botão para testar persistência
+        if st.button("🧪 Testar Reload Página", help="Simula F5 - deve manter login"):
+            st.rerun()
     
     # Mostrar logs recentes se possível
     with st.expander("📋 Debug Logs"):
