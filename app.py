@@ -338,6 +338,73 @@ def show_dashboard():
     """Dashboard principal"""
     st.header("🏠 Dashboard")
     
+    # ALERTA DE EMERGÊNCIA PARA DUPLICATAS - SOLUÇÃO IMEDIATA
+    total_ingredients = len(st.session_state.get('demo_ingredients', []))
+    if total_ingredients > 50:
+        st.error(f"🚨 EMERGÊNCIA: {total_ingredients} ingredientes duplicados detectados!")
+        st.warning("⚠️ Este é um problema conhecido. Use os botões abaixo para resolver AGORA:")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🗑️ LIMPAR TUDO", type="primary", key="dashboard_clear_all"):
+                st.session_state.demo_ingredients = []
+                st.success("✅ Todos os ingredientes foram removidos!")
+                st.balloons()
+                st.rerun()
+        
+        with col2:
+            if st.button("🔧 RESETAR COM BASE", type="secondary", key="dashboard_reset_base"):
+                try:
+                    import pandas as pd
+                    df = pd.read_csv("ingredientes_completos_200.csv")
+                    
+                    ingredientes_base = []
+                    for _, row in df.iterrows():
+                        ingrediente = {
+                            'nome': str(row['Nome']),
+                            'categoria': str(row['Categoria']),
+                            'preco': float(row['Preco']) if pd.notna(row['Preco']) else 0.0,
+                            'unid_receita': str(row['Unid_Receita']),
+                            'unid_compra': str(row['Unid_Compra']),
+                            'kcal_unid': float(row['Kcal_Unid']) if pd.notna(row['Kcal_Unid']) else 0.0,
+                            'fator_conv': float(row['Fator_Conv']) if pd.notna(row['Fator_Conv']) else 1.0,
+                            'ativo': str(row['Ativo']).upper() == 'TRUE',
+                            'observacoes': str(row['Observacoes']) if pd.notna(row['Observacoes']) else ''
+                        }
+                        ingredientes_base.append(ingrediente)
+                    
+                    st.session_state.demo_ingredients = ingredientes_base
+                    st.success(f"✅ Base de {len(ingredientes_base)} ingredientes carregada!")
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Erro ao carregar base: {e}")
+        
+        with col3:
+            if st.button("📊 REMOVER DUPLICATAS", key="dashboard_remove_dupes"):
+                # Remover duplicatas por nome
+                ingredientes_unicos = []
+                nomes_vistos = set()
+                
+                for ing in st.session_state.demo_ingredients:
+                    if isinstance(ing, dict):
+                        nome = ing.get('nome', '').strip().lower()
+                        if nome and nome not in nomes_vistos:
+                            nomes_vistos.add(nome)
+                            ingredientes_unicos.append(ing)
+                
+                duplicatas_removidas = len(st.session_state.demo_ingredients) - len(ingredientes_unicos)
+                st.session_state.demo_ingredients = ingredientes_unicos
+                
+                st.success(f"✅ {duplicatas_removidas} duplicatas removidas!")
+                st.info(f"Restam {len(ingredientes_unicos)} ingredientes únicos")
+                st.rerun()
+        
+        st.markdown("---")
+        st.info("💡 **Recomendação:** Use 'RESETAR COM BASE' para voltar aos 200 ingredientes originais.")
+        st.markdown("---")
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
