@@ -272,6 +272,11 @@ def main():
         
         menu_options = ["🏠 Dashboard", "🥕 Ingredientes", "📝 Receitas", "🏭 Produção"]
         
+        # Adicionar limpeza se há muitos ingredientes
+        total_ingredients = len(st.session_state.get('demo_ingredients', []))
+        if total_ingredients > 50:
+            menu_options.append("🧹 Limpeza de Dados")
+        
         # Adicionar menu admin se usuário for administrador
         try:
             from pages.admin_safe import show_admin_menu_item
@@ -320,6 +325,14 @@ def main():
         except Exception as e:
             logger.error("Erro ao carregar página debug", e)
             st.error("Erro ao carregar página de debug. Detalhes nos logs.")
+    elif selected_page == "🧹 Limpeza de Dados":
+        logger.log_page_access("Limpeza", user.get('email'))
+        try:
+            from pages.cleanup import show_cleanup_page
+            show_cleanup_page()
+        except Exception as e:
+            logger.error("Erro ao carregar página de limpeza", e)
+            st.error("Erro ao carregar página de limpeza. Detalhes nos logs.")
 
 def show_dashboard():
     """Dashboard principal"""
@@ -342,6 +355,21 @@ def show_dashboard():
 def show_ingredientes():
     """Página de ingredientes"""
     st.header("🥕 Gestão de Ingredientes")
+    
+    # Alerta de emergência para muitos ingredientes
+    total_ingredients = len(st.session_state.get('demo_ingredients', []))
+    if total_ingredients > 50:
+        st.error(f"🚨 ATENÇÃO: {total_ingredients} ingredientes detectados - possível problema de duplicatas!")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🧹 IR PARA LIMPEZA", type="primary", key="goto_cleanup"):
+                st.info("👈 Vá para '🧹 Limpeza de Dados' no menu lateral")
+        with col2:
+            if st.button("🔄 LIMPAR TUDO AGORA", key="emergency_clear"):
+                st.session_state.demo_ingredients = []
+                st.success("✅ Todos os ingredientes foram removidos!")
+                st.balloons()
+                st.rerun()
     
     tab1, tab2 = st.tabs(["📋 Lista", "➕ Adicionar"])
     
