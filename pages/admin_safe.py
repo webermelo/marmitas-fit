@@ -40,7 +40,7 @@ def show_admin_page():
     st.success(f"🔓 Acesso autorizado: {user_email}")
     
     # Tabs principais
-    tab1, tab2, tab3 = st.tabs(["📥 Templates", "📤 Uploads", "📊 Estatísticas"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📥 Templates", "📤 Uploads", "🧹 Limpeza", "📊 Estatísticas"])
     
     with tab1:
         show_templates_safe()
@@ -49,6 +49,9 @@ def show_admin_page():
         show_uploads_safe()
     
     with tab3:
+        show_cleanup_tools()
+    
+    with tab4:
         show_stats_safe()
 
 def show_templates_safe():
@@ -652,6 +655,153 @@ def parse_simple_json(json_str):
         
     except Exception as e:
         return {}
+
+def show_cleanup_tools():
+    """Ferramentas de limpeza e manutenção dos dados"""
+    
+    st.header("🧹 Limpeza e Manutenção")
+    st.warning("⚠️ Use essas ferramentas com cuidado - algumas ações são irreversíveis!")
+    
+    # Estatísticas atuais
+    st.subheader("📊 Status Atual dos Dados")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        total_ing = len(st.session_state.get('demo_ingredients', []))
+        st.metric("🥕 Total Ingredientes", total_ing)
+    
+    with col2:
+        total_rec = len(st.session_state.get('demo_recipes', []))
+        st.metric("📝 Total Receitas", total_rec)
+    
+    with col3:
+        total_emb = len(st.session_state.get('demo_embalagens', []))
+        st.metric("📦 Total Embalagens", total_emb)
+    
+    # Análise de duplicatas
+    st.subheader("🔍 Análise de Duplicatas")
+    
+    if st.session_state.get('demo_ingredients'):
+        ingredientes = st.session_state.demo_ingredients
+        
+        # Contar por nome
+        nomes = [ing.get('Nome', 'Sem nome') for ing in ingredientes]
+        from collections import Counter
+        contador_nomes = Counter(nomes)
+        
+        duplicatas = {nome: count for nome, count in contador_nomes.items() if count > 1}
+        
+        if duplicatas:
+            st.warning(f"⚠️ Encontradas {len(duplicatas)} nomes duplicados:")
+            
+            for nome, count in list(duplicatas.items())[:10]:  # Mostrar apenas os primeiros 10
+                st.write(f"- **{nome}**: {count} ocorrências")
+            
+            if len(duplicatas) > 10:
+                st.write(f"... e mais {len(duplicatas) - 10} duplicatas")
+        else:
+            st.success("✅ Nenhuma duplicata encontrada por nome")
+        
+        # Análise de estrutura
+        st.subheader("🔧 Análise de Estrutura")
+        
+        estruturas_diferentes = {}
+        for i, ing in enumerate(ingredientes):
+            chaves = tuple(sorted(ing.keys()))
+            if chaves not in estruturas_diferentes:
+                estruturas_diferentes[chaves] = []
+            estruturas_diferentes[chaves].append(i)
+        
+        if len(estruturas_diferentes) > 1:
+            st.warning(f"⚠️ Encontradas {len(estruturas_diferentes)} estruturas diferentes:")
+            
+            for i, (estrutura, indices) in enumerate(estruturas_diferentes.items()):
+                st.write(f"**Estrutura {i+1}** ({len(indices)} ingredientes):")
+                st.write(f"Campos: {list(estrutura)}")
+                st.write(f"Primeiros ingredientes: {indices[:5]}")
+        else:
+            st.success("✅ Todos os ingredientes têm a mesma estrutura")
+    
+    # Ferramentas de limpeza
+    st.subheader("🛠️ Ferramentas de Limpeza")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**🥕 Ingredientes:**")
+        
+        if st.button("🗑️ Remover Duplicatas por Nome", key="remove_duplicates"):
+            if st.session_state.get('demo_ingredients'):
+                ingredientes_unicos = []
+                nomes_vistos = set()
+                
+                for ing in st.session_state.demo_ingredients:
+                    nome = ing.get('Nome', '')
+                    if nome and nome not in nomes_vistos:
+                        # Garantir estrutura correta
+                        ingrediente_limpo = {
+                            'Nome': nome,
+                            'Categoria': ing.get('Categoria', 'Outros'),
+                            'Unidade_Receita': ing.get('Unidade_Receita', 'g'),
+                            'Unidade_Compra': ing.get('Unidade_Compra', 'kg'),
+                            'Preco_Padrao': float(ing.get('Preco_Padrao', 0)),
+                            'Kcal_Por_Unidade_Receita': float(ing.get('Kcal_Por_Unidade_Receita', 0)),
+                            'Fator_Conversao': float(ing.get('Fator_Conversao', 1000))
+                        }
+                        ingredientes_unicos.append(ingrediente_limpo)
+                        nomes_vistos.add(nome)
+                
+                st.session_state.demo_ingredients = ingredientes_unicos
+                st.success(f"✅ Limpeza concluída! {len(ingredientes_unicos)} ingredientes únicos mantidos.")
+                st.rerun()
+        
+        if st.button("🔄 Resetar Ingredientes", key="reset_ingredients"):
+            st.session_state.demo_ingredients = [
+                {'Nome': 'Frango (peito)', 'Categoria': 'Proteína Animal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 18.9, 'Kcal_Por_Unidade_Receita': 1.65, 'Fator_Conversao': 1000},
+                {'Nome': 'Arroz integral', 'Categoria': 'Carboidrato', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 1.11, 'Fator_Conversao': 1000},
+                {'Nome': 'Brócolis', 'Categoria': 'Vegetal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 0.34, 'Fator_Conversao': 1000},
+            ]
+            st.success("✅ Ingredientes resetados para os 3 iniciais!")
+            st.rerun()
+    
+    with col2:
+        st.write("**🧹 Geral:**")
+        
+        if st.button("🔄 Limpar Todos os Dados", key="reset_all"):
+            st.session_state.demo_ingredients = []
+            st.session_state.demo_recipes = []
+            st.session_state.demo_embalagens = []
+            st.session_state.demo_custos_fixos = []
+            st.success("✅ Todos os dados foram limpos!")
+            st.rerun()
+        
+        if st.button("🔧 Corrigir Estrutura dos Dados", key="fix_structure"):
+            if st.session_state.get('demo_ingredients'):
+                ingredientes_corrigidos = []
+                
+                for ing in st.session_state.demo_ingredients:
+                    # Tentar extrair nome válido
+                    nome = ing.get('Nome') or ing.get('nome') or ing.get('name') or 'Ingrediente sem nome'
+                    
+                    # Pular se nome for None, NaN ou vazio
+                    if not nome or str(nome).lower() in ['none', 'nan', '']:
+                        continue
+                    
+                    ingrediente_corrigido = {
+                        'Nome': str(nome).strip(),
+                        'Categoria': str(ing.get('Categoria') or ing.get('categoria') or 'Outros').strip(),
+                        'Unidade_Receita': str(ing.get('Unidade_Receita') or ing.get('unid_receita') or 'g').strip(),
+                        'Unidade_Compra': str(ing.get('Unidade_Compra') or ing.get('unid_compra') or 'kg').strip(),
+                        'Preco_Padrao': float(ing.get('Preco_Padrao') or ing.get('preco') or 0),
+                        'Kcal_Por_Unidade_Receita': float(ing.get('Kcal_Por_Unidade_Receita') or ing.get('kcal_unid') or 0),
+                        'Fator_Conversao': float(ing.get('Fator_Conversao') or ing.get('fator_conv') or 1000)
+                    }
+                    ingredientes_corrigidos.append(ingrediente_corrigido)
+                
+                st.session_state.demo_ingredients = ingredientes_corrigidos
+                st.success(f"✅ Estrutura corrigida! {len(ingredientes_corrigidos)} ingredientes válidos.")
+                st.rerun()
 
 def show_stats_safe():
     """Seção de estatísticas - versão segura"""
