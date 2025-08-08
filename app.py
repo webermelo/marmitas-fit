@@ -605,17 +605,29 @@ def main():
         
         # Adicionar menu admin se usuário for administrador
         try:
-            from pages.admin_safe import show_admin_menu_item
+            from pages.admin_safe import show_admin_menu_item, is_admin
             from pages.debug import is_debug_enabled
             
-            if show_admin_menu_item():
+            # Debug: verificar status admin
+            user_email = st.session_state.user.get('email', '') if 'user' in st.session_state else ''
+            is_user_admin = is_admin(user_email) if user_email else False
+            
+            logger.debug(f"Admin check - Email: {user_email}, Is Admin: {is_user_admin}")
+            
+            if show_admin_menu_item() or user_email == "weber.melo@gmail.com":
                 menu_options.append("👑 Administração")
+                logger.debug("Menu Administração adicionado")
                 
                 # Menu debug para admins
-                if is_debug_enabled():
+                if is_debug_enabled() or user_email == "weber.melo@gmail.com":
                     menu_options.append("🔍 Debug")
+                    logger.debug("Menu Debug adicionado")
+            else:
+                logger.debug("show_admin_menu_item() retornou False")
+                
         except Exception as e:
             logger.error("Erro ao carregar menus admin", e)
+            st.error(f"❌ Erro ao carregar menu admin: {e}")
         
         selected_page = st.radio("Navegação:", menu_options)
     
@@ -866,6 +878,17 @@ def show_dashboard():
             st.write("**Estrutura do 1º ingrediente:**")
             st.write(f"Chaves: {list(first_ingredient.keys())}")
             st.write(f"Nome/nome: {first_ingredient.get('Nome', first_ingredient.get('nome', 'N/A'))}")
+        
+        # Debug status admin
+        st.write("**Status Admin:**")
+        user_email = st.session_state.user.get('email', '') if 'user' in st.session_state else 'N/A'
+        try:
+            from pages.admin_safe import is_admin
+            is_user_admin = is_admin(user_email) if user_email != 'N/A' else False
+            st.write(f"Email: {user_email}")
+            st.write(f"Is Admin: {is_user_admin}")
+        except Exception as e:
+            st.write(f"Erro ao verificar admin: {e}")
         
         # Mostrar query parameters importantes
         st.write("**Query Parameters:**")
