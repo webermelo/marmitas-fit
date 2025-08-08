@@ -603,21 +603,20 @@ def save_ingredientes_to_session(df):
                 except:
                     fator_conv = 1.0
                 
-                # Estrutura para session state (compatibilidade com código antigo)
-                ingredient_data_old = {
+                # Estrutura COMPATÍVEL com o app (Nome maiúsculo, Preco_Padrao, etc.)
+                ingredient_data_compatible = {
+                    # Estrutura ANTIGA que o app espera
                     'Nome': nome,
                     'Categoria': categoria,
                     'Unidade_Receita': str(row['Unid_Receita']).strip() if pd.notna(row['Unid_Receita']) else 'g',
-                    'Unidade_Compra': str(row['Unid_Compra']).strip() if pd.notna(row['Unid_Compra']) else 'kg', 
+                    'Unidade_Compra': str(row['Unid_Compra']).strip() if pd.notna(row['Unid_Compra']) else 'kg',
                     'Preco_Padrao': preco,
                     'Kcal_Por_Unidade_Receita': kcal_unid,
                     'Fator_Conversao': fator_conv,
                     'Ativo': str(row['Ativo']).upper() == 'TRUE' if pd.notna(row['Ativo']) else True,
-                    'Observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else ''
-                }
-                
-                # Estrutura nova para Firebase (padronizada)
-                ingredient_data_new = {
+                    'Observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else '',
+                    
+                    # Estrutura NOVA também (para Firebase)
                     'nome': nome,
                     'categoria': categoria,
                     'unid_receita': str(row['Unid_Receita']).strip() if pd.notna(row['Unid_Receita']) else 'g',
@@ -629,13 +628,13 @@ def save_ingredientes_to_session(df):
                     'observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else ''
                 }
                 
-                # Salvar no session state
-                st.session_state.demo_ingredients.append(ingredient_data_new)
+                # Salvar no session state (estrutura compatível)
+                st.session_state.demo_ingredients.append(ingredient_data_compatible)
                 success_count += 1
                 
                 # SALVAR NO FIREBASE (SEM IMPORT CIRCULAR)
                 try:
-                    if save_ingredient_to_firebase_direct(ingredient_data_new):
+                    if save_ingredient_to_firebase_direct(ingredient_data_compatible):
                         firebase_success_count += 1
                         st.success(f"🔥 '{nome}' salvo no Firebase!")
                     else:
