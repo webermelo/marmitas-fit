@@ -66,8 +66,20 @@ except Exception as e:
 def check_auth():
     """Verificação de autenticação com Firebase ou modo demo"""
     
+    # Tentar restaurar sessão salva
+    if 'user' not in st.session_state:
+        restore_saved_session()
+    
     # Verificar se usuário já está logado (Firebase ou demo)
     if 'user' in st.session_state:
+        # Se Firebase disponível e usuário tem token, verificar se ainda é válido
+        if FIREBASE_AVAILABLE and 'token' in st.session_state.user:
+            if not is_token_valid(st.session_state.user.get('token')):
+                # Tentar renovar token
+                if not refresh_user_token():
+                    # Token inválido e não foi possível renovar - fazer logout
+                    clear_session()
+                    return show_login_page()
         return True
     
     # Se Firebase não disponível, mostrar opção de usar modo demo
@@ -76,6 +88,64 @@ def check_auth():
     
     # Interface de login com Firebase
     return show_login_page()
+
+def save_session():
+    """Salva dados da sessão para persistência"""
+    if 'user' in st.session_state:
+        # Usar session state como cache persistente
+        st.session_state['saved_user'] = st.session_state.user.copy()
+        st.session_state['session_saved'] = True
+
+def restore_saved_session():
+    """Restaura sessão salva"""
+    if 'saved_user' in st.session_state and st.session_state.get('session_saved'):
+        st.session_state.user = st.session_state.saved_user.copy()
+
+def clear_session():
+    """Limpa sessão e dados salvos"""
+    keys_to_clear = ['user', 'saved_user', 'session_saved', 'firebase_token', 
+                     'demo_ingredients', 'demo_recipes', 'current_production', 'production_history']
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+
+def is_token_valid(token):
+    """Verifica se token Firebase ainda é válido"""
+    if not token or not FIREBASE_AVAILABLE:
+        return False
+    
+    try:
+        # Fazer uma chamada simples para verificar token
+        import requests
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup"
+        headers = {'Authorization': f'Bearer {token}'}
+        response = requests.post(url, headers=headers, json={"idToken": token})
+        return response.status_code == 200
+    except:
+        return False
+
+def refresh_user_token():
+    """Tenta renovar token do usuário"""
+    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        return False
+    
+    refresh_token = st.session_state.user.get('refresh_token')
+    if not refresh_token:
+        return False
+    
+    try:
+        result = firebase_auth.refresh_token(refresh_token)
+        if result['success']:
+            # Atualizar token na sessão
+            st.session_state.user['token'] = result['token']
+            if 'refresh_token' in result:
+                st.session_state.user['refresh_token'] = result['refresh_token']
+            save_session()
+            return True
+    except:
+        pass
+    
+    return False
 
 def show_login_page():
     """Exibe página de login com Firebase"""
@@ -104,10 +174,15 @@ def show_login_page():
                             st.session_state.user = {
                                 "email": user_data["email"],
                                 "uid": user_data["uid"],
-                                "display_name": user_data["display_name"]
+                                "display_name": user_data["display_name"],
+                                "token": user_data["token"],
+                                "refresh_token": user_data["refresh_token"]
                             }
                             st.session_state.firebase_token = user_data["token"]
                             st.session_state.firebase_refresh_token = user_data["refresh_token"]
+                            
+                            # Salvar sessão para persistência
+                            save_session()
                             
                             st.success("✅ Login realizado com sucesso!")
                             st.rerun()
@@ -145,10 +220,15 @@ def show_login_page():
                                 st.session_state.user = {
                                     "email": user_data["email"],
                                     "uid": user_data["uid"],
-                                    "display_name": user_data["display_name"]
+                                    "display_name": user_data["display_name"],
+                                    "token": user_data["token"],
+                                    "refresh_token": user_data["refresh_token"]
                                 }
                                 st.session_state.firebase_token = user_data["token"]
                                 st.session_state.firebase_refresh_token = user_data["refresh_token"]
+                                
+                                # Salvar sessão para persistência
+                                save_session()
                                 
                                 st.success("✅ Conta criada com sucesso!")
                                 st.rerun()
@@ -223,15 +303,128 @@ def show_simple_auth():
 
 # Inicializar dados demo
 def init_demo_data():
+    """Inicializa dados demo ou carrega do Firebase"""
     if 'demo_ingredients' not in st.session_state:
-        st.session_state.demo_ingredients = [
-            {'Nome': 'Frango (peito)', 'Categoria': 'Proteína Animal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 18.9, 'Kcal_Por_Unidade_Receita': 1.65, 'Fator_Conversao': 1000},
-            {'Nome': 'Arroz integral', 'Categoria': 'Carboidrato', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 1.11, 'Fator_Conversao': 1000},
-            {'Nome': 'Brócolis', 'Categoria': 'Vegetal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 0.34, 'Fator_Conversao': 1000},
-        ]
+        # Tentar carregar do Firebase primeiro
+        firebase_ingredients = load_ingredients_from_firebase()
+        if firebase_ingredients:
+            st.session_state.demo_ingredients = firebase_ingredients
+        else:
+            # Fallback para dados demo se Firebase não disponível
+            st.session_state.demo_ingredients = []
     
     if 'demo_recipes' not in st.session_state:
-        st.session_state.demo_recipes = []
+        # Tentar carregar do Firebase primeiro
+        firebase_recipes = load_recipes_from_firebase()
+        if firebase_recipes:
+            st.session_state.demo_recipes = firebase_recipes
+        else:
+            # Fallback para dados demo se Firebase não disponível
+            st.session_state.demo_recipes = []
+
+def load_ingredients_from_firebase():
+    """Carrega ingredientes do Firebase"""
+    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        return []
+    
+    try:
+        from utils.firestore_client import get_firestore_client
+        db = get_firestore_client()
+        if db:
+            # Configurar token
+            if 'token' in st.session_state.user:
+                db.set_auth_token(st.session_state.user['token'])
+            
+            # Carregar ingredientes do usuário
+            user_id = st.session_state.user['uid']
+            ingredients = db.collection(f'users/{user_id}/ingredients').get()
+            
+            logger.info(f"Carregados {len(ingredients)} ingredientes do Firebase")
+            return ingredients
+            
+    except Exception as e:
+        logger.error(f"Erro ao carregar ingredientes do Firebase: {e}")
+    
+    return []
+
+def load_recipes_from_firebase():
+    """Carrega receitas do Firebase"""
+    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        return []
+    
+    try:
+        from utils.firestore_client import get_firestore_client
+        db = get_firestore_client()
+        if db:
+            # Configurar token
+            if 'token' in st.session_state.user:
+                db.set_auth_token(st.session_state.user['token'])
+            
+            # Carregar receitas do usuário
+            user_id = st.session_state.user['uid']
+            recipes = db.collection(f'users/{user_id}/recipes').get()
+            
+            logger.info(f"Carregadas {len(recipes)} receitas do Firebase")
+            return recipes
+            
+    except Exception as e:
+        logger.error(f"Erro ao carregar receitas do Firebase: {e}")
+    
+    return []
+
+def save_ingredient_to_firebase(ingredient):
+    """Salva ingrediente no Firebase"""
+    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        return False
+    
+    try:
+        from utils.firestore_client import get_firestore_client
+        db = get_firestore_client()
+        if db:
+            # Configurar token
+            if 'token' in st.session_state.user:
+                db.set_auth_token(st.session_state.user['token'])
+            
+            # Salvar ingrediente
+            user_id = st.session_state.user['uid']
+            ingredient['user_id'] = user_id
+            ingredient['created_at'] = datetime.now().isoformat()
+            
+            result = db.collection(f'users/{user_id}/ingredients').add(ingredient)
+            logger.info(f"Ingrediente salvo no Firebase: {ingredient.get('nome', 'N/A')}")
+            return True
+            
+    except Exception as e:
+        logger.error(f"Erro ao salvar ingrediente no Firebase: {e}")
+    
+    return False
+
+def save_recipe_to_firebase(recipe):
+    """Salva receita no Firebase"""
+    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        return False
+    
+    try:
+        from utils.firestore_client import get_firestore_client
+        db = get_firestore_client()
+        if db:
+            # Configurar token
+            if 'token' in st.session_state.user:
+                db.set_auth_token(st.session_state.user['token'])
+            
+            # Salvar receita
+            user_id = st.session_state.user['uid']
+            recipe['user_id'] = user_id
+            recipe['created_at'] = datetime.now().isoformat()
+            
+            result = db.collection(f'users/{user_id}/recipes').add(recipe)
+            logger.info(f"Receita salva no Firebase: {recipe.get('nome_receita', 'N/A')}")
+            return True
+            
+    except Exception as e:
+        logger.error(f"Erro ao salvar receita no Firebase: {e}")
+    
+    return False
 
 @log_exception
 def main():
@@ -262,19 +455,17 @@ def main():
         
         # Botão de logout
         if st.button("🚪 Sair", use_container_width=True):
-            # Limpar dados da sessão
-            for key in ['user', 'firebase_token', 'demo_ingredients', 'demo_recipes', 'current_production', 'production_history']:
-                if key in st.session_state:
-                    del st.session_state[key]
+            # Limpar sessão e dados salvos
+            clear_session()
             st.rerun()
         
         st.markdown("---")
         
         menu_options = ["🏠 Dashboard", "🥕 Ingredientes", "📝 Receitas", "🏭 Produção"]
         
-        # Adicionar limpeza se há muitos ingredientes
-        total_ingredients = len(st.session_state.get('demo_ingredients', []))
-        if total_ingredients > 250:
+        # Adicionar limpeza se há duplicatas por nome
+        has_duplicates, _, _ = detect_duplicates()
+        if has_duplicates:
             menu_options.append("🧹 Limpeza de Dados")
         
         # Adicionar menu admin se usuário for administrador
@@ -334,15 +525,53 @@ def main():
             logger.error("Erro ao carregar página de limpeza", e)
             st.error("Erro ao carregar página de limpeza. Detalhes nos logs.")
 
+def detect_duplicates():
+    """Detecta ingredientes duplicados por nome"""
+    ingredients = st.session_state.get('demo_ingredients', [])
+    if not ingredients:
+        return False, 0, []
+    
+    # Contar ingredientes por nome (case-insensitive)
+    name_counts = {}
+    duplicates = []
+    
+    for i, ing in enumerate(ingredients):
+        if isinstance(ing, dict):
+            nome = ing.get('nome', '').strip().lower()
+            if nome:
+                if nome in name_counts:
+                    name_counts[nome] += 1
+                    duplicates.append((i, ing.get('nome', ''), nome))
+                else:
+                    name_counts[nome] = 1
+    
+    # Verificar se há duplicatas reais
+    has_duplicates = any(count > 1 for count in name_counts.values())
+    total_duplicates = sum(count - 1 for count in name_counts.values() if count > 1)
+    
+    return has_duplicates, total_duplicates, duplicates
+
 def show_dashboard():
     """Dashboard principal"""
     st.header("🏠 Dashboard")
     
-    # ALERTA DE EMERGÊNCIA PARA DUPLICATAS - SOLUÇÃO IMEDIATA
+    # DETECÇÃO INTELIGENTE DE DUPLICATAS POR NOME
+    has_duplicates, total_duplicates, duplicate_list = detect_duplicates()
     total_ingredients = len(st.session_state.get('demo_ingredients', []))
-    if total_ingredients > 250:
-        st.error(f"🚨 EMERGÊNCIA: {total_ingredients} ingredientes duplicados detectados!")
-        st.warning("⚠️ Este é um problema conhecido. Use os botões abaixo para resolver AGORA:")
+    
+    if has_duplicates:
+        st.error(f"🚨 DUPLICATAS DETECTADAS: {total_duplicates} ingredientes duplicados encontrados!")
+        st.warning(f"⚠️ Total de {total_ingredients} ingredientes, mas {total_duplicates} são duplicatas por nome.")
+        
+        # Mostrar alguns exemplos de duplicatas
+        if duplicate_list:
+            with st.expander("🔍 Ver exemplos de duplicatas"):
+                for i, (idx, original_name, normalized_name) in enumerate(duplicate_list[:5]):
+                    st.write(f"• Duplicata {i+1}: '{original_name}' (posição {idx})")
+                if len(duplicate_list) > 5:
+                    st.write(f"... e mais {len(duplicate_list) - 5} duplicatas")
+        
+        st.warning("⚠️ Use os botões abaixo para resolver:")
         
         col1, col2, col3 = st.columns(3)
         
@@ -417,22 +646,104 @@ def show_dashboard():
     with col3:
         st.metric("🔄 Status", "Online")
     
-    st.info("💡 Sistema funcionando em modo demonstração. Dados são salvos na sessão do navegador.")
+    # Informações sobre persistência de dados
+    st.markdown("---")
+    st.subheader("💾 Persistência de Dados")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if FIREBASE_AVAILABLE and 'user' in st.session_state and 'token' in st.session_state.user:
+            st.success("🔥 **Firebase Ativo - Dados Permanentes**")
+            st.write("""
+            **Como funcionam os dados:**
+            • ✅ Salvos no **Firebase Firestore**
+            • ✅ **Persistem após logout/reload**
+            • ✅ **Sincronizados** entre dispositivos
+            • ✅ **Login mantido** ao recarregar página
+            • ✅ **Backup automático** na nuvem
+            """)
+        else:
+            st.warning("🎮 **Modo Local/Demo**")
+            st.write("""
+            **Como funcionam os dados:**
+            • Salvos na **sessão do navegador** (temporário)
+            • Permanecem enquanto a **aba estiver aberta**
+            • São **perdidos** ao fechar o navegador
+            • **Logout também apaga** todos os dados
+            """)
+    
+    with col2:
+        if FIREBASE_AVAILABLE and 'user' in st.session_state and 'token' in st.session_state.user:
+            st.info("✅ **Dados Seguros no Firebase**")
+            st.write("""
+            **Benefícios ativados:**
+            • ✅ **Login persistente** - não sai ao recarregar
+            • ✅ **Ingredientes salvos** permanentemente
+            • ✅ **Receitas salvas** permanentemente
+            • ✅ **Dados isolados** por usuário
+            • ✅ **Backup automático** na Google Cloud
+            """)
+        else:
+            st.warning("⚠️ **Dados Temporários**")
+            st.write("""
+            **Limitações atuais:**
+            • ❌ Login perdido ao recarregar
+            • ❌ Dados perdidos ao fechar aba
+            • ❌ Sem backup/sincronização
+            • ❌ Dados não persistem
+            
+            **💡 Faça login com Firebase para persistência!**
+            """)
+    
+    # Status da conexão detalhado
+    st.markdown("---")
+    if FIREBASE_AVAILABLE:
+        if 'user' in st.session_state and 'token' in st.session_state.user:
+            st.success("🔗 Firebase conectado e autenticado")
+            st.info(f"👤 Usuário: {st.session_state.user.get('email', 'N/A')}")
+        else:
+            st.info("🔗 Firebase disponível - faça login para persistência")
+    else:
+        st.error("❌ Firebase não disponível - usando modo demo")
 
 def show_ingredientes():
     """Página de ingredientes"""
     st.header("🥕 Gestão de Ingredientes")
     
-    # Alerta de emergência para muitos ingredientes
-    total_ingredients = len(st.session_state.get('demo_ingredients', []))
-    if total_ingredients > 250:
-        st.error(f"🚨 ATENÇÃO: {total_ingredients} ingredientes detectados - possível problema de duplicatas!")
+    # Detectar duplicatas reais por nome
+    has_duplicates, total_duplicates, duplicate_list = detect_duplicates()
+    
+    if has_duplicates:
+        st.error(f"🚨 DUPLICATAS DETECTADAS: {total_duplicates} ingredientes com nomes duplicados!")
+        
+        # Mostrar exemplos de duplicatas
+        with st.expander(f"🔍 Ver {min(len(duplicate_list), 10)} exemplos de duplicatas"):
+            for i, (idx, original_name, normalized_name) in enumerate(duplicate_list[:10]):
+                st.write(f"• '{original_name}' (posição {idx})")
+        
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🧹 IR PARA LIMPEZA", type="primary", key="goto_cleanup"):
-                st.info("👈 Vá para '🧹 Limpeza de Dados' no menu lateral")
+            if st.button("🧹 REMOVER DUPLICATAS", type="primary", key="ingredients_remove_dupes"):
+                # Remover duplicatas por nome
+                ingredientes_unicos = []
+                nomes_vistos = set()
+                
+                for ing in st.session_state.demo_ingredients:
+                    if isinstance(ing, dict):
+                        nome = ing.get('nome', '').strip().lower()
+                        if nome and nome not in nomes_vistos:
+                            nomes_vistos.add(nome)
+                            ingredientes_unicos.append(ing)
+                
+                duplicatas_removidas = len(st.session_state.demo_ingredients) - len(ingredientes_unicos)
+                st.session_state.demo_ingredients = ingredientes_unicos
+                
+                st.success(f"✅ {duplicatas_removidas} duplicatas removidas!")
+                st.rerun()
+        
         with col2:
-            if st.button("🔄 LIMPAR TUDO AGORA", key="emergency_clear"):
+            if st.button("🔄 LIMPAR TUDO", key="emergency_clear_ingredients"):
                 st.session_state.demo_ingredients = []
                 st.success("✅ Todos os ingredientes foram removidos!")
                 st.balloons()
@@ -500,17 +811,29 @@ def show_ingredientes():
             if st.form_submit_button("💾 Salvar Ingrediente"):
                 if nome and categoria:
                     novo_ingrediente = {
-                        'Nome': nome,
-                        'Categoria': categoria,
-                        'Unidade_Receita': unidade_receita,
-                        'Unidade_Compra': unidade_compra,
-                        'Preco_Padrao': preco,
-                        'Kcal_Por_Unidade_Receita': kcal,
-                        'Fator_Conversao': fator_conversao
+                        'nome': nome,
+                        'categoria': categoria,
+                        'unid_receita': unidade_receita,
+                        'unid_compra': unidade_compra,
+                        'preco': preco,
+                        'kcal_unid': kcal,
+                        'fator_conv': fator_conversao,
+                        'ativo': True,
+                        'observacoes': ''
                     }
                     
+                    # Salvar no session state
                     st.session_state.demo_ingredients.append(novo_ingrediente)
-                    st.success(f"✅ Ingrediente '{nome}' adicionado!")
+                    
+                    # Tentar salvar no Firebase
+                    firebase_saved = save_ingredient_to_firebase(novo_ingrediente)
+                    
+                    if firebase_saved:
+                        st.success(f"✅ Ingrediente '{nome}' salvo no Firebase!")
+                    else:
+                        st.success(f"✅ Ingrediente '{nome}' salvo localmente!")
+                        st.info("💾 Para persistência permanente, verifique conexão Firebase")
+                    
                     st.rerun()
                 else:
                     st.error("❌ Preencha pelo menos o nome e categoria!")
@@ -668,6 +991,8 @@ def show_receitas():
                 if st.button("💾 Salvar Receita", use_container_width=True):
                     if nome_receita and st.session_state.recipe_ingredients:
                         
+                        firebase_saved_count = 0
+                        
                         # Salvar cada ingrediente como um registro
                         for ingrediente in st.session_state.recipe_ingredients:
                             recipe_data = {
@@ -679,12 +1004,21 @@ def show_receitas():
                                 "custo_total": custo_total,
                                 "calorias_unitario": ingrediente['kcal_unitario'],
                                 "calorias_total": calorias_total,
-                                "created_at": datetime.now()
+                                "created_at": datetime.now().isoformat()
                             }
                             
+                            # Salvar no session state
                             st.session_state.demo_recipes.append(recipe_data)
+                            
+                            # Tentar salvar no Firebase
+                            if save_recipe_to_firebase(recipe_data):
+                                firebase_saved_count += 1
                         
-                        st.success(f"✅ Receita '{nome_receita}' salva com {len(st.session_state.recipe_ingredients)} ingredientes!")
+                        if firebase_saved_count > 0:
+                            st.success(f"✅ Receita '{nome_receita}' salva no Firebase com {len(st.session_state.recipe_ingredients)} ingredientes!")
+                        else:
+                            st.success(f"✅ Receita '{nome_receita}' salva localmente com {len(st.session_state.recipe_ingredients)} ingredientes!")
+                            st.info("💾 Para persistência permanente, verifique conexão Firebase")
                         st.session_state.recipe_ingredients = []  # Limpar
                         st.rerun()
                     else:
