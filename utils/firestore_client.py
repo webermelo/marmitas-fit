@@ -81,19 +81,13 @@ class FirestoreCollection:
         for key, value in data.items():
             firestore_data["fields"][key] = self.client._convert_to_firestore_value(value)
         
-        print(f"DEBUG: Firestore ADD URL: {url}")
-        print(f"DEBUG: Data to save: {data}")
-        print(f"DEBUG: Firestore format: {firestore_data}")
-        print(f"DEBUG: Headers: {self.client._get_headers()}")
+        # Debug info (será mostrado via logging no app principal)
         
         response = requests.post(
             url, 
             json=firestore_data,
             headers=self.client._get_headers()
         )
-        
-        print(f"DEBUG: Add response status: {response.status_code}")
-        print(f"DEBUG: Add response text: {response.text}")
         
         if response.status_code in [200, 201]:
             return response.json()
@@ -104,20 +98,13 @@ class FirestoreCollection:
         """Lista todos os documentos da coleção"""
         url = f"{self.client.base_url}/{self.collection_name}"
         
-        print(f"DEBUG: Firestore GET URL: {url}")
-        print(f"DEBUG: Headers: {self.client._get_headers()}")
-        
         response = requests.get(url, headers=self.client._get_headers())
-        
-        print(f"DEBUG: Response status: {response.status_code}")
-        print(f"DEBUG: Response text: {response.text[:500]}...")
         
         if response.status_code == 200:
             data = response.json()
             documents = []
             
             if 'documents' in data:
-                print(f"DEBUG: Encontrados {len(data['documents'])} documentos")
                 for doc in data['documents']:
                     doc_data = {}
                     if 'fields' in doc:
@@ -126,13 +113,10 @@ class FirestoreCollection:
                     
                     doc_data['id'] = doc['name'].split('/')[-1]
                     documents.append(doc_data)
-            else:
-                print("DEBUG: Nenhum documento encontrado na resposta")
             
-            print(f"DEBUG: Retornando {len(documents)} documentos")
             return documents
         else:
-            print(f"DEBUG: Erro na requisição: {response.status_code} - {response.text}")
+            # Log error but don't print to console
             return []
     
     def document(self, doc_id: str):

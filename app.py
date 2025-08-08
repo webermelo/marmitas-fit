@@ -471,42 +471,66 @@ def load_recipes_from_firebase():
     return []
 
 def save_ingredient_to_firebase(ingredient):
-    """Salva ingrediente no Firebase"""
-    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
-        logger.debug("Firebase não disponível ou usuário não logado - não salvando")
+    """Salva ingrediente no Firebase COM DEBUGGING DETALHADO"""
+    if not FIREBASE_AVAILABLE:
+        st.error("❌ Firebase não está disponível")
+        return False
+        
+    if 'user' not in st.session_state:
+        st.error("❌ Usuário não está logado")
         return False
     
     try:
+        # Verificar imports
         from utils.firestore_client import get_firestore_client
+        
+        # Obter cliente
         db = get_firestore_client()
-        if db:
-            # Configurar token
-            if 'token' in st.session_state.user:
-                db.set_auth_token(st.session_state.user['token'])
-            
-            # Preparar dados para salvar
-            user_id = st.session_state.user['uid']
-            collection_path = f'users/{user_id}/ingredients'
-            
-            ingredient_data = ingredient.copy()
-            ingredient_data['user_id'] = user_id
-            ingredient_data['created_at'] = datetime.now().isoformat()
-            
-            logger.info(f"Tentando salvar ingrediente em: {collection_path}")
-            logger.debug(f"Dados do ingrediente: {ingredient_data}")
-            
-            result = db.collection(collection_path).add(ingredient_data)
-            
+        if not db:
+            st.error("❌ Cliente Firestore não foi inicializado (verifique secrets.toml)")
+            return False
+        
+        # Verificar token
+        if 'token' not in st.session_state.user or not st.session_state.user['token']:
+            st.error("❌ Token de autenticação não encontrado")
+            return False
+        
+        # Configurar autenticação
+        token = st.session_state.user['token']
+        db.set_auth_token(token)
+        st.info(f"🔑 Token configurado: {token[:20]}...")
+        
+        # Preparar dados
+        user_id = st.session_state.user['uid']
+        collection_path = f'users/{user_id}/ingredients'
+        
+        ingredient_data = ingredient.copy()
+        ingredient_data['user_id'] = user_id
+        ingredient_data['created_at'] = datetime.now().isoformat()
+        
+        st.info(f"📍 Salvando em: {collection_path}")
+        st.info(f"📋 Dados: {ingredient_data.get('nome', 'N/A')} - {ingredient_data.get('categoria', 'N/A')}")
+        
+        # Salvar no Firebase
+        result = db.collection(collection_path).add(ingredient_data)
+        
+        if result:
+            st.success(f"✅ Ingrediente '{ingredient.get('nome', 'N/A')}' salvo no Firebase!")
             logger.info(f"✅ Ingrediente salvo no Firebase: {ingredient.get('nome', 'N/A')}")
-            logger.debug(f"Resultado Firebase: {result}")
-            
             return True
         else:
-            logger.error("Cliente Firestore não disponível")
+            st.error("❌ Falha ao salvar no Firebase (result vazio)")
+            return False
             
     except Exception as e:
+        st.error(f"❌ ERRO CRÍTICO no Firebase: {str(e)}")
         logger.error(f"❌ Erro ao salvar ingrediente no Firebase: {e}")
-        logger.error(f"Detalhes do erro: {str(e)}")
+        
+        # Mostrar stack trace completo para debug
+        import traceback
+        error_details = traceback.format_exc()
+        st.code(error_details)
+        logger.error(f"Stack trace: {error_details}")
     
     return False
 
