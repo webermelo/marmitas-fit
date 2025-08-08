@@ -198,6 +198,54 @@ Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azei
         - **Margem_Lucro:** Porcentagem (ex: 40 para 40%)
         - **Exemplo:** `{"frango_peito":200_"arroz":100_"brocolis":50}`
         """)
+    
+    # FERRAMENTAS DE EMERGÊNCIA AQUI (mais visível)
+    st.markdown("---")
+    st.subheader("🚨 ATENÇÃO: Limpeza de Dados")
+    
+    total_ingredients = len(st.session_state.get('demo_ingredients', []))
+    if total_ingredients > 10:
+        st.error(f"⚠️ PROBLEMA DETECTADO: {total_ingredients} ingredientes duplicados!")
+        st.info("💡 Use os botões abaixo para resolver:")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🗑️ LIMPAR DUPLICATAS", key="fix_duplicates_now", type="primary"):
+                ingredientes_unicos = []
+                nomes_vistos = set()
+                
+                for ing in st.session_state.demo_ingredients:
+                    nome = ing.get('Nome', '')
+                    if nome and nome not in nomes_vistos and str(nome).lower() not in ['none', 'nan', '']:
+                        ingrediente_limpo = {
+                            'Nome': nome,
+                            'Categoria': ing.get('Categoria', 'Outros'),
+                            'Unidade_Receita': ing.get('Unidade_Receita', 'g'),
+                            'Unidade_Compra': ing.get('Unidade_Compra', 'kg'),
+                            'Preco_Padrao': float(ing.get('Preco_Padrao', 0)),
+                            'Kcal_Por_Unidade_Receita': float(ing.get('Kcal_Por_Unidade_Receita', 0)),
+                            'Fator_Conversao': float(ing.get('Fator_Conversao', 1000))
+                        }
+                        ingredientes_unicos.append(ingrediente_limpo)
+                        nomes_vistos.add(nome)
+                
+                st.session_state.demo_ingredients = ingredientes_unicos
+                st.success(f"✅ CORRIGIDO! {len(ingredientes_unicos)} ingredientes únicos.")
+                st.balloons()
+                st.rerun()
+        
+        with col2:
+            if st.button("🔄 RESETAR DADOS", key="reset_all_data"):
+                st.session_state.demo_ingredients = [
+                    {'Nome': 'Frango (peito)', 'Categoria': 'Proteína Animal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 18.9, 'Kcal_Por_Unidade_Receita': 1.65, 'Fator_Conversao': 1000},
+                    {'Nome': 'Arroz integral', 'Categoria': 'Carboidrato', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 1.11, 'Fator_Conversao': 1000},
+                    {'Nome': 'Brócolis', 'Categoria': 'Vegetal', 'Unidade_Receita': 'g', 'Unidade_Compra': 'kg', 'Preco_Padrao': 8.9, 'Kcal_Por_Unidade_Receita': 0.34, 'Fator_Conversao': 1000},
+                ]
+                st.success("✅ RESETADO! Dados limpos.")
+                st.rerun()
+    else:
+        st.success(f"✅ Dados OK: {total_ingredients} ingredientes")
 
 def show_uploads_safe():
     """Seção de uploads CSV - versão segura"""
