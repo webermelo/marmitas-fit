@@ -500,18 +500,15 @@ def save_ingredientes_to_session(df):
                     fator_conv = 1.0
                 
                 ingredient_data = {
-                    'id': f"upload_{success_count}_{idx}",
                     'Nome': nome,
                     'Categoria': categoria,
-                    'Preco_Padrao': preco,
                     'Unidade_Receita': str(row['Unid_Receita']).strip() if pd.notna(row['Unid_Receita']) else 'g',
-                    'Unidade_Compra': str(row['Unid_Compra']).strip() if pd.notna(row['Unid_Compra']) else 'kg',
+                    'Unidade_Compra': str(row['Unid_Compra']).strip() if pd.notna(row['Unid_Compra']) else 'kg', 
+                    'Preco_Padrao': preco,
                     'Kcal_Por_Unidade_Receita': kcal_unid,
                     'Fator_Conversao': fator_conv,
                     'Ativo': str(row['Ativo']).upper() == 'TRUE' if pd.notna(row['Ativo']) else True,
-                    'Observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else '',
-                    'source': 'upload_csv',
-                    'created_at': pd.Timestamp.now().isoformat()
+                    'Observacoes': str(row.get('Observacoes', '')).strip() if pd.notna(row.get('Observacoes', '')) else ''
                 }
                 
                 st.session_state.demo_ingredients.append(ingredient_data)

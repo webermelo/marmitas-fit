@@ -349,8 +349,38 @@ def show_ingredientes():
         st.subheader("📋 Ingredientes Cadastrados")
         
         if st.session_state.demo_ingredients:
-            df_ingredients = pd.DataFrame(st.session_state.demo_ingredients)
-            st.dataframe(df_ingredients, use_container_width=True)
+            # Debug: Mostrar estrutura dos dados
+            with st.expander("🔍 Debug - Estrutura dos Ingredientes"):
+                st.write(f"**Total de ingredientes:** {len(st.session_state.demo_ingredients)}")
+                st.write("**Primeiros 3 ingredientes (estrutura):**")
+                for i, ing in enumerate(st.session_state.demo_ingredients[:3]):
+                    st.write(f"Ingrediente {i+1}:")
+                    st.json(ing)
+                
+                st.write("**Chaves encontradas no primeiro ingrediente:**")
+                if st.session_state.demo_ingredients:
+                    st.write(list(st.session_state.demo_ingredients[0].keys()))
+            
+            # Criar DataFrame com tratamento de erro
+            try:
+                df_ingredients = pd.DataFrame(st.session_state.demo_ingredients)
+                st.dataframe(df_ingredients, use_container_width=True)
+                
+                # Mostrar info do DataFrame
+                with st.expander("📊 Info DataFrame"):
+                    st.write("**Colunas do DataFrame:**")
+                    st.write(list(df_ingredients.columns))
+                    st.write("**Tipos de dados:**")
+                    st.write(df_ingredients.dtypes)
+                    st.write("**Shape:**")
+                    st.write(df_ingredients.shape)
+                    
+            except Exception as e:
+                st.error(f"Erro ao criar DataFrame: {str(e)}")
+                st.write("**Dados brutos:**")
+                for i, ing in enumerate(st.session_state.demo_ingredients):
+                    st.write(f"{i+1}. {ing}")
+                    
         else:
             st.info("Nenhum ingrediente cadastrado.")
     
