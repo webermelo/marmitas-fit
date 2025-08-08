@@ -374,7 +374,7 @@ def init_demo_data():
             logger.debug("Inicializado receitas vazio (sem usuário/Firebase)")
 
 def load_ingredients_from_firebase():
-    """Carrega ingredientes do Firebase"""
+    """Carrega ingredientes do Firebase com conversão de estrutura"""
     if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
         logger.debug("Firebase não disponível ou usuário não logado")
         return []
@@ -392,15 +392,25 @@ def load_ingredients_from_firebase():
             collection_path = f'users/{user_id}/ingredients'
             
             logger.info(f"Tentando carregar ingredientes de: {collection_path}")
-            ingredients = db.collection(collection_path).get()
+            raw_ingredients = db.collection(collection_path).get()
             
-            logger.info(f"✅ Carregados {len(ingredients)} ingredientes do Firebase")
+            logger.info(f"✅ Carregados {len(raw_ingredients)} ingredientes brutos do Firebase")
             
-            # Debug: mostrar estrutura dos dados
-            if ingredients:
-                logger.debug(f"Exemplo ingrediente: {ingredients[0]}")
+            # CONVERSÃO: Firebase → estrutura compatível com app
+            converted_ingredients = []
+            for ingredient in raw_ingredients:
+                try:
+                    # Estrutura nova (Firebase) → estrutura antiga (compatibilidade)
+                    converted = convert_ingredient_structure(ingredient)
+                    converted_ingredients.append(converted)
+                    logger.debug(f"Convertido: {ingredient.get('nome', 'N/A')} → {converted.get('Nome', 'N/A')}")
+                except Exception as e:
+                    logger.error(f"Erro ao converter ingrediente {ingredient}: {e}")
+                    continue
             
-            return ingredients
+            logger.info(f"✅ {len(converted_ingredients)} ingredientes convertidos e prontos")
+            
+            return converted_ingredients
         else:
             logger.error("Cliente Firestore não disponível")
             
@@ -408,6 +418,32 @@ def load_ingredients_from_firebase():
         logger.error(f"❌ Erro ao carregar ingredientes do Firebase: {e}")
     
     return []
+
+def convert_ingredient_structure(firebase_ingredient):
+    """Converte estrutura Firebase para estrutura compatível com a app"""
+    try:
+        # Firebase structure → App structure  
+        converted = {
+            'Nome': firebase_ingredient.get('nome', ''),
+            'Categoria': firebase_ingredient.get('categoria', ''),
+            'Unidade_Receita': firebase_ingredient.get('unid_receita', 'g'),
+            'Unidade_Compra': firebase_ingredient.get('unid_compra', 'kg'),
+            'Preco_Padrao': firebase_ingredient.get('preco', 0.0),
+            'Kcal_Por_Unidade_Receita': firebase_ingredient.get('kcal_unid', 0.0),
+            'Fator_Conversao': firebase_ingredient.get('fator_conv', 1.0),
+            'Ativo': firebase_ingredient.get('ativo', True),
+            'Observacoes': firebase_ingredient.get('observacoes', ''),
+            
+            # Campos extras para compatibilidade
+            'nome': firebase_ingredient.get('nome', ''),  # Manter ambas estruturas
+            'categoria': firebase_ingredient.get('categoria', ''),
+            'preco': firebase_ingredient.get('preco', 0.0),
+            'kcal_unid': firebase_ingredient.get('kcal_unid', 0.0)
+        }
+        return converted
+    except Exception as e:
+        logger.error(f"Erro na conversão de estrutura: {e}")
+        return firebase_ingredient  # Retornar original se conversão falhar
 
 def load_recipes_from_firebase():
     """Carrega receitas do Firebase"""
@@ -799,6 +835,13 @@ def show_dashboard():
         st.write(f"Demo recipes: {len(st.session_state.get('demo_recipes', []))}")
         st.write(f"Session saved: {st.session_state.get('session_saved', False)}")
         st.write(f"User in session: {'user' in st.session_state}")
+        
+        # Debug estrutura dos ingredientes
+        if st.session_state.get('demo_ingredients'):
+            first_ingredient = st.session_state.demo_ingredients[0]
+            st.write("**Estrutura do 1º ingrediente:**")
+            st.write(f"Chaves: {list(first_ingredient.keys())}")
+            st.write(f"Nome/nome: {first_ingredient.get('Nome', first_ingredient.get('nome', 'N/A'))}")
         
         # Mostrar query parameters importantes
         st.write("**Query Parameters:**")
