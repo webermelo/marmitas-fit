@@ -69,17 +69,14 @@ def check_auth():
     # Tentar restaurar sessão salva
     if 'user' not in st.session_state:
         restore_saved_session()
+        logger.debug("Tentativa de restaurar sessão")
     
-    # Verificar se usuário já está logado (Firebase ou demo)
+    # Verificar se usuário já está logado
     if 'user' in st.session_state:
-        # Se Firebase disponível e usuário tem token, verificar se ainda é válido
-        if FIREBASE_AVAILABLE and 'token' in st.session_state.user:
-            if not is_token_valid(st.session_state.user.get('token')):
-                # Tentar renovar token
-                if not refresh_user_token():
-                    # Token inválido e não foi possível renovar - fazer logout
-                    clear_session()
-                    return show_login_page()
+        logger.debug(f"Usuário encontrado na sessão: {st.session_state.user.get('email', 'N/A')}")
+        
+        # TEMPORÁRIO: Desabilitar validação de token para debugging
+        # Manter usuário logado sem verificar token para testar persistência
         return True
     
     # Se Firebase não disponível, mostrar opção de usar modo demo
@@ -117,11 +114,17 @@ def is_token_valid(token):
     try:
         # Fazer uma chamada simples para verificar token
         import requests
-        url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup"
-        headers = {'Authorization': f'Bearer {token}'}
-        response = requests.post(url, headers=headers, json={"idToken": token})
+        config = st.secrets.get("firebase", {})
+        api_key = config.get("apiKey", "")
+        
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={api_key}"
+        payload = {"idToken": token}
+        response = requests.post(url, json=payload)
+        
+        logger.debug(f"Token validation response: {response.status_code}")
         return response.status_code == 200
-    except:
+    except Exception as e:
+        logger.error(f"Erro ao validar token: {e}")
         return False
 
 def refresh_user_token():
@@ -325,6 +328,7 @@ def init_demo_data():
 def load_ingredients_from_firebase():
     """Carrega ingredientes do Firebase"""
     if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        logger.debug("Firebase não disponível ou usuário não logado")
         return []
     
     try:
@@ -337,13 +341,23 @@ def load_ingredients_from_firebase():
             
             # Carregar ingredientes do usuário
             user_id = st.session_state.user['uid']
-            ingredients = db.collection(f'users/{user_id}/ingredients').get()
+            collection_path = f'users/{user_id}/ingredients'
             
-            logger.info(f"Carregados {len(ingredients)} ingredientes do Firebase")
+            logger.info(f"Tentando carregar ingredientes de: {collection_path}")
+            ingredients = db.collection(collection_path).get()
+            
+            logger.info(f"✅ Carregados {len(ingredients)} ingredientes do Firebase")
+            
+            # Debug: mostrar estrutura dos dados
+            if ingredients:
+                logger.debug(f"Exemplo ingrediente: {ingredients[0]}")
+            
             return ingredients
+        else:
+            logger.error("Cliente Firestore não disponível")
             
     except Exception as e:
-        logger.error(f"Erro ao carregar ingredientes do Firebase: {e}")
+        logger.error(f"❌ Erro ao carregar ingredientes do Firebase: {e}")
     
     return []
 
@@ -375,6 +389,7 @@ def load_recipes_from_firebase():
 def save_ingredient_to_firebase(ingredient):
     """Salva ingrediente no Firebase"""
     if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        logger.debug("Firebase não disponível ou usuário não logado - não salvando")
         return False
     
     try:
@@ -385,17 +400,29 @@ def save_ingredient_to_firebase(ingredient):
             if 'token' in st.session_state.user:
                 db.set_auth_token(st.session_state.user['token'])
             
-            # Salvar ingrediente
+            # Preparar dados para salvar
             user_id = st.session_state.user['uid']
-            ingredient['user_id'] = user_id
-            ingredient['created_at'] = datetime.now().isoformat()
+            collection_path = f'users/{user_id}/ingredients'
             
-            result = db.collection(f'users/{user_id}/ingredients').add(ingredient)
-            logger.info(f"Ingrediente salvo no Firebase: {ingredient.get('nome', 'N/A')}")
+            ingredient_data = ingredient.copy()
+            ingredient_data['user_id'] = user_id
+            ingredient_data['created_at'] = datetime.now().isoformat()
+            
+            logger.info(f"Tentando salvar ingrediente em: {collection_path}")
+            logger.debug(f"Dados do ingrediente: {ingredient_data}")
+            
+            result = db.collection(collection_path).add(ingredient_data)
+            
+            logger.info(f"✅ Ingrediente salvo no Firebase: {ingredient.get('nome', 'N/A')}")
+            logger.debug(f"Resultado Firebase: {result}")
+            
             return True
+        else:
+            logger.error("Cliente Firestore não disponível")
             
     except Exception as e:
-        logger.error(f"Erro ao salvar ingrediente no Firebase: {e}")
+        logger.error(f"❌ Erro ao salvar ingrediente no Firebase: {e}")
+        logger.error(f"Detalhes do erro: {str(e)}")
     
     return False
 
@@ -698,14 +725,49 @@ def show_dashboard():
     
     # Status da conexão detalhado
     st.markdown("---")
-    if FIREBASE_AVAILABLE:
-        if 'user' in st.session_state and 'token' in st.session_state.user:
-            st.success("🔗 Firebase conectado e autenticado")
-            st.info(f"👤 Usuário: {st.session_state.user.get('email', 'N/A')}")
+    st.subheader("🔍 Status de Debug")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Status Firebase:**")
+        if FIREBASE_AVAILABLE:
+            st.success("✅ Firebase disponível")
+            if 'user' in st.session_state:
+                if 'token' in st.session_state.user:
+                    st.success("✅ Usuário autenticado")
+                    st.info(f"👤 Email: {st.session_state.user.get('email', 'N/A')}")
+                    st.info(f"🔑 UID: {st.session_state.user.get('uid', 'N/A')}")
+                else:
+                    st.warning("⚠️ Usuário sem token")
+            else:
+                st.error("❌ Usuário não encontrado")
         else:
-            st.info("🔗 Firebase disponível - faça login para persistência")
-    else:
-        st.error("❌ Firebase não disponível - usando modo demo")
+            st.error("❌ Firebase não disponível")
+    
+    with col2:
+        st.write("**Debug Session State:**")
+        st.write(f"Demo ingredients: {len(st.session_state.get('demo_ingredients', []))}")
+        st.write(f"Demo recipes: {len(st.session_state.get('demo_recipes', []))}")
+        st.write(f"Session saved: {st.session_state.get('session_saved', False)}")
+        st.write(f"User exists: {'user' in st.session_state}")
+        
+        # Botão para forçar reload dos dados
+        if st.button("🔄 Forçar Reload Firebase"):
+            if 'user' in st.session_state:
+                firebase_ingredients = load_ingredients_from_firebase()
+                st.session_state.demo_ingredients = firebase_ingredients
+                st.info(f"Carregados {len(firebase_ingredients)} ingredientes")
+                st.rerun()
+    
+    # Mostrar logs recentes se possível
+    with st.expander("📋 Debug Logs"):
+        try:
+            from utils.logger import logger
+            logs = logger.get_recent_logs(20)
+            st.text(logs[-1000:] if logs else "Nenhum log disponível")
+        except:
+            st.text("Sistema de logs não disponível")
 
 def show_ingredientes():
     """Página de ingredientes"""
