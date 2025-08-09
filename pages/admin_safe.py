@@ -712,10 +712,15 @@ def save_ingredient_to_firebase_direct(ingredient):
         st.info(f"📋 Item: {ingredient_data.get('nome', 'N/A')} - {ingredient_data.get('categoria', 'N/A')}")
         
         # Salvar no Firebase via REST API
+        st.info(f"🔥 Chamando db.collection('{collection_path}').add()")
         result = db.collection(collection_path).add(ingredient_data)
+        
+        st.info(f"🔍 Result type: {type(result)}")
+        st.info(f"🔍 Result value: {result}")
         
         if result:
             st.success(f"✅ Firebase: '{ingredient_data.get('nome', 'N/A')}' salvo com sucesso!")
+            st.info(f"📄 Document ID: {result}")
             return True
         else:
             st.error("❌ Firebase: Falha na resposta (resultado vazio)")

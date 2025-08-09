@@ -377,24 +377,48 @@ def load_ingredients_from_firebase():
     """Carrega ingredientes do Firebase com conversão de estrutura"""
     if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
         logger.debug("Firebase não disponível ou usuário não logado")
+        st.error("🚫 Firebase não disponível ou usuário não logado")
         return []
     
     try:
         from utils.firestore_client import get_firestore_client
         db = get_firestore_client()
-        if db:
-            # Configurar token
-            if 'token' in st.session_state.user:
-                db.set_auth_token(st.session_state.user['token'])
+        if not db:
+            st.error("❌ Cliente Firestore é None - verifique secrets.toml")
+            logger.error("Cliente Firestore não inicializado")
+            return []
             
-            # Carregar ingredientes do usuário
-            user_id = st.session_state.user['uid']
-            collection_path = f'users/{user_id}/ingredients'
+        # Verificar token CRÍTICO
+        if 'token' not in st.session_state.user or not st.session_state.user['token']:
+            st.error("❌ Token de autenticação não encontrado no session_state")
+            logger.error(f"User keys: {list(st.session_state.user.keys()) if 'user' in st.session_state else 'No user'}")
+            return []
             
-            logger.info(f"Tentando carregar ingredientes de: {collection_path}")
-            raw_ingredients = db.collection(collection_path).get()
-            
-            logger.info(f"✅ Carregados {len(raw_ingredients)} ingredientes brutos do Firebase")
+        # Configurar token
+        token = st.session_state.user['token']
+        db.set_auth_token(token)
+        st.info(f"🔑 Token configurado para load: {token[:20]}...")
+        
+        # Carregar ingredientes do usuário
+        user_id = st.session_state.user['uid']
+        collection_path = f'users/{user_id}/ingredients'
+        
+        st.info(f"📍 Tentando carregar de: {collection_path}")
+        st.info(f"👤 User ID: {user_id}")
+        logger.info(f"Tentando carregar ingredientes de: {collection_path}")
+        
+        # CHAMADA CRÍTICA
+        raw_ingredients = db.collection(collection_path).get()
+        
+        st.info(f"🔍 Raw ingredients type: {type(raw_ingredients)}")
+        st.info(f"🔍 Raw ingredients length: {len(raw_ingredients) if raw_ingredients else 'None'}")
+        
+        logger.info(f"✅ Carregados {len(raw_ingredients)} ingredientes brutos do Firebase")
+        
+        # DEBUG: Mostrar primeiro item se existir
+        if raw_ingredients:
+            st.success(f"✅ {len(raw_ingredients)} ingredientes encontrados no Firebase!")
+            st.info(f"🔍 Primeiro item: {raw_ingredients[0] if raw_ingredients else 'Empty'}")
             
             # CONVERSÃO: Firebase → estrutura compatível com app
             converted_ingredients = []
@@ -409,15 +433,23 @@ def load_ingredients_from_firebase():
                     continue
             
             logger.info(f"✅ {len(converted_ingredients)} ingredientes convertidos e prontos")
+            st.success(f"🔄 {len(converted_ingredients)} ingredientes convertidos com sucesso!")
             
             return converted_ingredients
         else:
-            logger.error("Cliente Firestore não disponível")
+            st.error(f"❌ NENHUM ingrediente encontrado na coleção: {collection_path}")
+            logger.error(f"Coleção vazia ou inexistente: {collection_path}")
+            return []
             
     except Exception as e:
+        st.error(f"❌ ERRO CRÍTICO ao carregar Firebase: {str(e)}")
         logger.error(f"❌ Erro ao carregar ingredientes do Firebase: {e}")
-    
-    return []
+        
+        # Mostrar stack trace completo para debug
+        import traceback
+        error_details = traceback.format_exc()
+        st.code(f"Stack trace:\n{error_details}")
+        return []
 
 def convert_ingredient_structure(firebase_ingredient):
     """Converte estrutura Firebase para estrutura compatível com a app"""
