@@ -565,6 +565,9 @@ def validate_receitas_data(df):
 def save_ingredientes_to_session(df):
     """Salva ingredientes no session state E Firebase - VERSÃO COMPLETA"""
     try:
+        # Import garantido dentro da função
+        import pandas as pd
+        
         # Limpar ingredientes existentes para evitar duplicatas
         st.session_state.demo_ingredients = []
         
