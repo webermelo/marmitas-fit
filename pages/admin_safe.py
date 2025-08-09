@@ -5,6 +5,7 @@ Painel para gerenciar ingredientes, embalagens e usuários
 """
 
 import streamlit as st
+import pandas as pd
 from datetime import datetime
 
 # Lista de administradores autorizados
