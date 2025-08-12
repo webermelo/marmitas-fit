@@ -216,12 +216,14 @@ def show_login_page():
                             user_data = result["user"]
                             
                             # Salvar dados do usuário na sessão
+                            from datetime import datetime
                             st.session_state.user = {
                                 "email": user_data["email"],
                                 "uid": user_data["uid"],
                                 "display_name": user_data["display_name"],
                                 "token": user_data["token"],
-                                "refresh_token": user_data["refresh_token"]
+                                "refresh_token": user_data["refresh_token"],
+                                "token_timestamp": datetime.now().isoformat()  # CORREÇÃO: Adicionar timestamp
                             }
                             st.session_state.firebase_token = user_data["token"]
                             st.session_state.firebase_refresh_token = user_data["refresh_token"]
@@ -262,12 +264,14 @@ def show_login_page():
                                 user_data = result["user"]
                                 
                                 # Salvar dados do usuário na sessão
+                                from datetime import datetime
                                 st.session_state.user = {
                                     "email": user_data["email"],
                                     "uid": user_data["uid"],
                                     "display_name": user_data["display_name"],
                                     "token": user_data["token"],
-                                    "refresh_token": user_data["refresh_token"]
+                                    "refresh_token": user_data["refresh_token"],
+                                    "token_timestamp": datetime.now().isoformat()  # CORREÇÃO: Adicionar timestamp
                                 }
                                 st.session_state.firebase_token = user_data["token"]
                                 st.session_state.firebase_refresh_token = user_data["refresh_token"]
@@ -374,81 +378,40 @@ def init_demo_data():
             logger.debug("Inicializado receitas vazio (sem usuário/Firebase)")
 
 def load_ingredients_from_firebase():
-    """Carrega ingredientes do Firebase com conversão de estrutura"""
+    """
+    DEPRECIADA: Esta função foi substituída pelo DatabaseManager unificado
+    Mantém para compatibilidade, mas delega para o DatabaseManager
+    """
     if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
         logger.debug("Firebase não disponível ou usuário não logado")
-        st.error("🚫 Firebase não disponível ou usuário não logado")
+        st.warning("⚠️ Firebase não disponível - usando DatabaseManager")
         return []
     
     try:
-        from utils.firestore_client import get_firestore_client
-        db = get_firestore_client()
-        if not db:
-            st.error("❌ Cliente Firestore é None - verifique secrets.toml")
-            logger.error("Cliente Firestore não inicializado")
-            return []
-            
-        # Verificar token CRÍTICO
-        if 'token' not in st.session_state.user or not st.session_state.user['token']:
-            st.error("❌ Token de autenticação não encontrado no session_state")
-            logger.error(f"User keys: {list(st.session_state.user.keys()) if 'user' in st.session_state else 'No user'}")
-            return []
-            
-        # Configurar token
-        token = st.session_state.user['token']
-        db.set_auth_token(token)
-        st.info(f"🔑 Token configurado para load: {token[:20]}...")
+        # SOLUÇÃO: Usar DatabaseManager unificado
+        from utils.database import get_database_manager
         
-        # Carregar ingredientes do usuário
+        db_manager = get_database_manager()
         user_id = st.session_state.user['uid']
-        collection_path = f'users/{user_id}/ingredients'
         
-        st.info(f"📍 Tentando carregar de: {collection_path}")
-        st.info(f"👤 User ID: {user_id}")
-        logger.info(f"Tentando carregar ingredientes de: {collection_path}")
+        st.info(f"🔄 Carregando ingredientes via DatabaseManager unificado")
         
-        # CHAMADA CRÍTICA
-        raw_ingredients = db.collection(collection_path).get()
+        # Carregar usando método unificado
+        df_ingredients = db_manager.get_user_ingredients(user_id)
         
-        st.info(f"🔍 Raw ingredients type: {type(raw_ingredients)}")
-        st.info(f"🔍 Raw ingredients length: {len(raw_ingredients) if raw_ingredients else 'None'}")
-        
-        logger.info(f"✅ Carregados {len(raw_ingredients)} ingredientes brutos do Firebase")
-        
-        # DEBUG: Mostrar primeiro item se existir
-        if raw_ingredients:
-            st.success(f"✅ {len(raw_ingredients)} ingredientes encontrados no Firebase!")
-            st.info(f"🔍 Primeiro item: {raw_ingredients[0] if raw_ingredients else 'Empty'}")
-            
-            # CONVERSÃO: Firebase → estrutura compatível com app
-            converted_ingredients = []
-            for ingredient in raw_ingredients:
-                try:
-                    # Estrutura nova (Firebase) → estrutura antiga (compatibilidade)
-                    converted = convert_ingredient_structure(ingredient)
-                    converted_ingredients.append(converted)
-                    logger.debug(f"Convertido: {ingredient.get('nome', 'N/A')} → {converted.get('Nome', 'N/A')}")
-                except Exception as e:
-                    logger.error(f"Erro ao converter ingrediente {ingredient}: {e}")
-                    continue
-            
-            logger.info(f"✅ {len(converted_ingredients)} ingredientes convertidos e prontos")
-            st.success(f"🔄 {len(converted_ingredients)} ingredientes convertidos com sucesso!")
-            
-            return converted_ingredients
+        if not df_ingredients.empty:
+            # Converter DataFrame para lista de dicionários (compatibilidade)
+            ingredients_list = df_ingredients.to_dict('records')
+            st.success(f"✅ {len(ingredients_list)} ingredientes carregados via DatabaseManager")
+            logger.info(f"✅ {len(ingredients_list)} ingredientes carregados via DatabaseManager")
+            return ingredients_list
         else:
-            st.error(f"❌ NENHUM ingrediente encontrado na coleção: {collection_path}")
-            logger.error(f"Coleção vazia ou inexistente: {collection_path}")
+            st.warning("⚠️ Nenhum ingrediente encontrado")
             return []
             
     except Exception as e:
-        st.error(f"❌ ERRO CRÍTICO ao carregar Firebase: {str(e)}")
-        logger.error(f"❌ Erro ao carregar ingredientes do Firebase: {e}")
-        
-        # Mostrar stack trace completo para debug
-        import traceback
-        error_details = traceback.format_exc()
-        st.code(f"Stack trace:\n{error_details}")
+        st.error(f"❌ Erro ao carregar via DatabaseManager: {str(e)}")
+        logger.error(f"❌ Erro ao carregar ingredientes via DatabaseManager: {e}")
         return []
 
 def convert_ingredient_structure(firebase_ingredient):
@@ -503,68 +466,38 @@ def load_recipes_from_firebase():
     return []
 
 def save_ingredient_to_firebase(ingredient):
-    """Salva ingrediente no Firebase COM DEBUGGING DETALHADO"""
-    if not FIREBASE_AVAILABLE:
-        st.error("❌ Firebase não está disponível")
-        return False
-        
-    if 'user' not in st.session_state:
-        st.error("❌ Usuário não está logado")
+    """
+    DEPRECIADA: Esta função foi substituída pelo DatabaseManager unificado
+    Mantém para compatibilidade, mas delega para o DatabaseManager
+    """
+    if not FIREBASE_AVAILABLE or 'user' not in st.session_state:
+        st.error("❌ Firebase não disponível ou usuário não logado")
         return False
     
     try:
-        # Verificar imports
-        from utils.firestore_client import get_firestore_client
+        # SOLUÇÃO: Usar DatabaseManager unificado
+        from utils.database import get_database_manager
         
-        # Obter cliente
-        db = get_firestore_client()
-        if not db:
-            st.error("❌ Cliente Firestore não foi inicializado (verifique secrets.toml)")
-            return False
-        
-        # Verificar token
-        if 'token' not in st.session_state.user or not st.session_state.user['token']:
-            st.error("❌ Token de autenticação não encontrado")
-            return False
-        
-        # Configurar autenticação
-        token = st.session_state.user['token']
-        db.set_auth_token(token)
-        st.info(f"🔑 Token configurado: {token[:20]}...")
-        
-        # Preparar dados
+        db_manager = get_database_manager()
         user_id = st.session_state.user['uid']
-        collection_path = f'users/{user_id}/ingredients'
         
-        ingredient_data = ingredient.copy()
-        ingredient_data['user_id'] = user_id
-        ingredient_data['created_at'] = datetime.now().isoformat()
+        st.info(f"🔄 Salvando ingrediente via DatabaseManager unificado")
         
-        st.info(f"📍 Salvando em: {collection_path}")
-        st.info(f"📋 Dados: {ingredient_data.get('nome', 'N/A')} - {ingredient_data.get('categoria', 'N/A')}")
-        
-        # Salvar no Firebase
-        result = db.collection(collection_path).add(ingredient_data)
+        # Salvar usando método unificado
+        result = db_manager.save_ingredient(user_id, ingredient)
         
         if result:
-            st.success(f"✅ Ingrediente '{ingredient.get('nome', 'N/A')}' salvo no Firebase!")
-            logger.info(f"✅ Ingrediente salvo no Firebase: {ingredient.get('nome', 'N/A')}")
-            return True
+            st.success(f"✅ Ingrediente salvo via DatabaseManager!")
+            logger.info(f"✅ Ingrediente salvo via DatabaseManager: {ingredient.get('Nome', ingredient.get('nome', 'N/A'))}")
         else:
-            st.error("❌ Falha ao salvar no Firebase (result vazio)")
-            return False
-            
-    except Exception as e:
-        st.error(f"❌ ERRO CRÍTICO no Firebase: {str(e)}")
-        logger.error(f"❌ Erro ao salvar ingrediente no Firebase: {e}")
+            st.error("❌ Falha ao salvar via DatabaseManager")
         
-        # Mostrar stack trace completo para debug
-        import traceback
-        error_details = traceback.format_exc()
-        st.code(error_details)
-        logger.error(f"Stack trace: {error_details}")
-    
-    return False
+        return result
+        
+    except Exception as e:
+        st.error(f"❌ Erro ao salvar via DatabaseManager: {str(e)}")
+        logger.error(f"❌ Erro ao salvar ingrediente via DatabaseManager: {e}")
+        return False
 
 def save_recipe_to_firebase(recipe):
     """Salva receita no Firebase"""

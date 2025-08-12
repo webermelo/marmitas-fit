@@ -32,15 +32,19 @@ class FirestoreClient:
         return FirestoreCollection(self, collection_name)
     
     def _convert_to_firestore_value(self, value):
-        """Converte valor Python para formato Firestore"""
+        """Converte valor Python para formato Firestore - PRODUCTION FIX"""
+        
+        # CRITICAL FIX: Bool must come BEFORE int check
+        # isinstance(True, int) returns True in Python!
+        
         if isinstance(value, str):
             return {"stringValue": value}
+        elif isinstance(value, bool):  # MUST BE FIRST - bool is subclass of int
+            return {"booleanValue": value}
         elif isinstance(value, int):
             return {"integerValue": str(value)}
         elif isinstance(value, float):
             return {"doubleValue": value}
-        elif isinstance(value, bool):
-            return {"booleanValue": value}
         elif isinstance(value, dict):
             fields = {}
             for k, v in value.items():
@@ -48,7 +52,6 @@ class FirestoreClient:
             return {"mapValue": {"fields": fields}}
         else:
             return {"stringValue": str(value)}
-    
     def _convert_from_firestore_value(self, firestore_value):
         """Converte valor Firestore para formato Python"""
         if "stringValue" in firestore_value:
@@ -91,8 +94,15 @@ class FirestoreCollection:
         
         if response.status_code in [200, 201]:
             return response.json()
+        elif response.status_code == 401:
+            # Erro de autenticação específico
+            error_detail = response.json() if response.text else {"error": "Sem detalhes"}
+            raise Exception(f"ERRO AUTENTICAÇÃO: Token inválido ou expirado. Detalhes: {error_detail}")
+        elif response.status_code == 403:
+            # Erro de permissão
+            raise Exception(f"ERRO PERMISSÃO: Usuário não tem acesso a esta coleção. Response: {response.text}")
         else:
-            raise Exception(f"Erro ao adicionar documento: {response.text}")
+            raise Exception(f"Erro ao adicionar documento: STATUS {response.status_code} - {response.text}")
     
     def get(self):
         """Lista todos os documentos da coleção"""
@@ -115,9 +125,18 @@ class FirestoreCollection:
                     documents.append(doc_data)
             
             return documents
-        else:
-            # Log error but don't print to console
+        elif response.status_code == 401:
+            # Erro de autenticação
+            raise Exception(f"ERRO AUTENTICAÇÃO na leitura: Token inválido. Response: {response.text}")
+        elif response.status_code == 403:
+            # Erro de permissão
+            raise Exception(f"ERRO PERMISSÃO na leitura: Acesso negado. Response: {response.text}")
+        elif response.status_code == 404:
+            # Coleção não existe (normal)
             return []
+        else:
+            # Outros erros
+            raise Exception(f"ERRO na leitura: STATUS {response.status_code} - {response.text}")
     
     def document(self, doc_id: str):
         """Retorna referência para um documento específico"""
@@ -168,10 +187,27 @@ class FirestoreDocument:
         else:
             return None
 
-@st.cache_resource
 def get_firestore_client():
-    """Obtém cliente Firestore cached"""
+    """
+    Obtém cliente Firestore SEM cache problemático + Token Manager
+    
+    CORREÇÃO CRÍTICA: Remove @st.cache_resource para evitar token antigo
+    sendo mantido em cache quando usuário faz novo login
+    
+    NOVA FUNCIONALIDADE: Usa TokenManager para garantir token válido
+    """
     try:
+        from .token_manager import get_valid_token, ensure_token_timestamp
+        
+        # Garantir que token tenha timestamp
+        ensure_token_timestamp()
+        
+        # Obter token válido (renova automaticamente se expirado)
+        token = get_valid_token()
+        if not token:
+            st.error("ERRO: Token inválido - não é possível conectar ao Firebase")
+            return None
+        
         # Tentar obter configuração do Streamlit secrets
         config = st.secrets.get("firebase", {})
         if config:
@@ -180,11 +216,14 @@ def get_firestore_client():
             # Fallback para configuração local
             project_id = "marmita-fit-6a3ca"
         
+        # Criar nova instância sempre (sem cache)
         client = FirestoreClient(project_id)
         
-        # Definir token se usuário está autenticado
-        if 'user' in st.session_state and 'token' in st.session_state.user:
-            client.set_auth_token(st.session_state.user['token'])
+        # Definir token VÁLIDO obtido do TokenManager
+        client.set_auth_token(token)
+        
+        # Debug: Verificar se token está sendo definido
+        st.info(f"Token valido configurado: {token[:20] if token else 'NENHUM'}...")
         
         return client
         

@@ -676,7 +676,10 @@ def save_ingredientes_to_session(df):
         return 0
 
 def save_ingredient_to_firebase_direct(ingredient):
-    """Salva ingrediente diretamente no Firebase SEM import circular"""
+    """
+    Salva ingrediente diretamente no Firebase
+    VERSÃO CORRIGIDA: Gerenciamento adequado de token
+    """
     
     # Verificar se usuário está logado
     if 'user' not in st.session_state:
@@ -684,24 +687,21 @@ def save_ingredient_to_firebase_direct(ingredient):
         return False
     
     try:
-        # Import direto do cliente
+        # CORREÇÃO 1: Importar gerenciador de token e cliente
+        from utils.token_manager import get_valid_token
         from utils.firestore_client import get_firestore_client
         
-        # Obter cliente Firestore
+        # CORREÇÃO 2: Obter token válido (com renovação automática)
+        token = get_valid_token()
+        if not token:
+            st.error("❌ Não foi possível obter token válido")
+            return False
+        
+        # CORREÇÃO 3: Obter cliente NOVO (sem cache problemático)
         db = get_firestore_client()
         if not db:
             st.error("❌ Cliente Firestore não inicializado")
             return False
-        
-        # Verificar e configurar token
-        if 'token' not in st.session_state.user or not st.session_state.user['token']:
-            st.error("❌ Token de autenticação não encontrado")
-            return False
-        
-        # Configurar autenticação
-        token = st.session_state.user['token']
-        db.set_auth_token(token)
-        st.info(f"🔑 Token configurado: {token[:20]}...")
         
         # Preparar dados
         user_id = st.session_state.user['uid']
@@ -714,6 +714,18 @@ def save_ingredient_to_firebase_direct(ingredient):
         
         st.info(f"📍 Salvando em: {collection_path}")
         st.info(f"📋 Item: {ingredient_data.get('nome', 'N/A')} - {ingredient_data.get('categoria', 'N/A')}")
+        
+        # 🔍 DEBUG COMPLETO DOS DADOS ANTES DA CONVERSÃO
+        st.subheader("🔍 DEBUG: Dados antes da conversão Firestore")
+        for key, value in ingredient_data.items():
+            st.write(f"**{key}**: `{value}` (tipo: `{type(value).__name__}`)")
+        
+        # 🔍 DEBUG: Verificar especificamente os campos booleanos
+        boolean_fields = ['ativo', 'Ativo']
+        for field in boolean_fields:
+            if field in ingredient_data:
+                value = ingredient_data[field]
+                st.error(f"🚨 CAMPO BOOLEANO '{field}': valor=`{value}`, tipo=`{type(value).__name__}`, é bool?: `{isinstance(value, bool)}`")
         
         # Salvar no Firebase via REST API
         st.info(f"🔥 Chamando db.collection('{collection_path}').add()")
