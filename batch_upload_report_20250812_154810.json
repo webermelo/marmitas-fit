@@ -1,0 +1,232 @@
+{
+  "total_items": 27,
+  "processed": 27,
+  "successful": 27,
+  "failed": 0,
+  "retries": 4,
+  "start_time": 1755024475.6995656,
+  "batch_results": [
+    {
+      "batch_number": 1,
+      "items": 10,
+      "successful": 10,
+      "failed": 0,
+      "items_processed": [
+        {
+          "name": "Frango peito sem pele",
+          "status": "SUCCESS",
+          "duration": 5.7220458984375e-06,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Carne bovina patinho",
+          "status": "SUCCESS",
+          "duration": 1.6689300537109375e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Arroz integral",
+          "status": "SUCCESS",
+          "duration": 1.6450881958007812e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Batata doce",
+          "status": "SUCCESS",
+          "duration": 1.5497207641601562e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Brócolis",
+          "status": "SUCCESS",
+          "duration": 1.3828277587890625e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Tomate",
+          "status": "SUCCESS",
+          "duration": 1.4066696166992188e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Cenoura",
+          "status": "SUCCESS",
+          "duration": 1.6927719116210938e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Feijão preto",
+          "status": "SUCCESS",
+          "duration": 6.866455078125e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Lentilha",
+          "status": "SUCCESS",
+          "duration": 2.2411346435546875e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Azeite oliva",
+          "status": "SUCCESS",
+          "duration": 1.4066696166992188e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        }
+      ],
+      "duration": 3.0031986236572266,
+      "success_rate": 100.0
+    },
+    {
+      "batch_number": 2,
+      "items": 10,
+      "successful": 10,
+      "failed": 0,
+      "items_processed": [
+        {
+          "name": "Sal refinado",
+          "status": "SUCCESS",
+          "duration": 1.1205673217773438e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Pimenta preta",
+          "status": "SUCCESS",
+          "duration": 1.621246337890625e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Alho",
+          "status": "SUCCESS",
+          "duration": 1.5497207641601562e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Cebola",
+          "status": "SUCCESS",
+          "duration": 2.002716064453125e-05,
+          "boolean_test": "OK",
+          "retries": 2
+        },
+        {
+          "name": "Leite integral",
+          "status": "SUCCESS",
+          "duration": 1.5974044799804688e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Queijo mussarela",
+          "status": "SUCCESS",
+          "duration": 2.2649765014648438e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Ovo caipira",
+          "status": "SUCCESS",
+          "duration": 1.5974044799804688e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Banana prata",
+          "status": "SUCCESS",
+          "duration": 1.4781951904296875e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Maçã fuji",
+          "status": "SUCCESS",
+          "duration": 1.5020370483398438e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Aveia flocos",
+          "status": "SUCCESS",
+          "duration": 3.2901763916015625e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        }
+      ],
+      "duration": 4.204678535461426,
+      "success_rate": 100.0
+    },
+    {
+      "batch_number": 3,
+      "items": 7,
+      "successful": 7,
+      "failed": 0,
+      "items_processed": [
+        {
+          "name": "Amendoim torrado",
+          "status": "SUCCESS",
+          "duration": 1.4066696166992188e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Castanha caju",
+          "status": "SUCCESS",
+          "duration": 5.054473876953125e-05,
+          "boolean_test": "OK",
+          "retries": 1
+        },
+        {
+          "name": "Iogurte natural",
+          "status": "SUCCESS",
+          "duration": 2.0742416381835938e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Mel silvestre",
+          "status": "SUCCESS",
+          "duration": 2.47955322265625e-05,
+          "boolean_test": "OK",
+          "retries": 1
+        },
+        {
+          "name": "Vinagre balsamico",
+          "status": "SUCCESS",
+          "duration": 2.6226043701171875e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Teste Inativo 1",
+          "status": "SUCCESS",
+          "duration": 2.1219253540039062e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        },
+        {
+          "name": "Teste Inativo 2",
+          "status": "SUCCESS",
+          "duration": 2.4557113647460938e-05,
+          "boolean_test": "OK",
+          "retries": 0
+        }
+      ],
+      "duration": 3.30346417427063,
+      "success_rate": 100.0
+    }
+  ],
+  "end_time": 1755024490.211676,
+  "total_duration": 14.512110233306885,
+  "overall_success_rate": 100.0
+}

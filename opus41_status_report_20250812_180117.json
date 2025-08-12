@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-08-12T18:01:17.222798",
+  "analysis_type": "OPUS_4.1_STATUS_CHECK",
+  "csv_file": "ingredientes_completos_200.csv",
+  "total_ingredients": 198,
+  "current_saved": 100,
+  "remaining": 98,
+  "completion_rate": 50.505050505050505,
+  "config_opus41": {
+    "batch_size": 10,
+    "batch_delay": 2.0,
+    "item_delay": 0.3,
+    "max_retries": 3
+  },
+  "estimated_time_remaining": 49.0,
+  "data_quality": "OK",
+  "deployment_status": "PENDING",
+  "next_action": "WAIT_FOR_DEPLOYMENT_THEN_UPLOAD"
+}

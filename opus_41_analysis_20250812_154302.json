@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-08-12T15:43:02.415796",
+  "problem_analysis": {
+    "ingredients_saved": 85,
+    "ingredients_missing": 113,
+    "success_rate": 42.92929292929293,
+    "severity": "ALTO"
+  },
+  "hypotheses": [
+    {
+      "name": "RATE LIMITING FIREBASE",
+      "probability": "ALTA",
+      "evidence": "113 ingredientes faltando indica limitacao de operacoes",
+      "cause": "Firebase bloqueia uploads muito rapidos",
+      "solution": "Upload em lotes pequenos com delays"
+    },
+    {
+      "name": "TIMEOUT APLICACAO",
+      "probability": "ALTA",
+      "evidence": "Upload 42.9% completo sugere interrupcao",
+      "cause": "Browser ou Streamlit interrompe por timeout",
+      "solution": "Upload incremental com checkpoints"
+    },
+    {
+      "name": "DADOS PROBLEMATICOS",
+      "probability": "MEDIA",
+      "evidence": "Alguns ingredientes podem ter dados invalidos",
+      "cause": "Caracteres especiais ou formato incorreto",
+      "solution": "Validacao previa + sanitizacao"
+    }
+  ],
+  "recommended_strategy": {
+    "name": "CONSERVADOR",
+    "batch_size": 10,
+    "batch_delay": 2.0,
+    "item_delay": 0.3,
+    "max_retries": 3
+  },
+  "implementation": {
+    "tool": "batch_upload_optimizer.py",
+    "batch_size": 10,
+    "batch_delay": 2.0,
+    "item_delay": 0.3,
+    "estimated_time": 57.9,
+    "batches_needed": 12
+  }
+}

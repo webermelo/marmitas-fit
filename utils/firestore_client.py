@@ -222,8 +222,9 @@ def get_firestore_client():
         # Definir token VÁLIDO obtido do TokenManager
         client.set_auth_token(token)
         
-        # Debug: Verificar se token está sendo definido
-        st.info(f"Token valido configurado: {token[:20] if token else 'NENHUM'}...")
+        # Debug: Verificar se token está sendo definido (apenas em desenvolvimento)
+        if os.getenv('DEBUG_MODE'):
+            st.info(f"Token valido configurado: {token[:20] if token else 'NENHUM'}...")
         
         return client
         

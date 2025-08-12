@@ -410,9 +410,37 @@ def load_ingredients_from_firebase():
             return []
             
     except Exception as e:
-        st.error(f"❌ Erro ao carregar via DatabaseManager: {str(e)}")
-        logger.error(f"❌ Erro ao carregar ingredientes via DatabaseManager: {e}")
-        return []
+        error_msg = str(e)
+        
+        # Tratamento específico para erro de autenticação
+        if "401" in error_msg or "UNAUTHENTICATED" in error_msg or "Token inválido" in error_msg:
+            st.error("🚨 **Erro de Autenticação Detectado**")
+            st.warning("🔑 Seu token de acesso expirou. Por favor:")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("🔄 Tentar Reconectar", type="primary", key="reconnect_auth"):
+                    # Limpar tokens expirados
+                    if 'user' in st.session_state:
+                        st.session_state.user.pop('token', None)
+                        st.session_state.user.pop('token_timestamp', None)
+                    st.rerun()
+            
+            with col2:
+                if st.button("🚪 Logout e Login Novamente", key="logout_login"):
+                    # Limpar sessão completamente
+                    for key in list(st.session_state.keys()):
+                        del st.session_state[key]
+                    st.rerun()
+            
+            st.info("💡 **Solução rápida**: Faça logout e login novamente para renovar a autenticação")
+            logger.error(f"❌ Erro de autenticação: {error_msg}")
+            return []
+        else:
+            st.error(f"❌ Erro ao carregar via DatabaseManager: {error_msg}")
+            logger.error(f"❌ Erro ao carregar ingredientes via DatabaseManager: {e}")
+            return []
 
 def convert_ingredient_structure(firebase_ingredient):
     """Converte estrutura Firebase para estrutura compatível com a app"""

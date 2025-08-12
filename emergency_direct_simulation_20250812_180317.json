@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-08-12T18:03:17.796241",
+  "type": "EMERGENCY_DIRECT_SIMULATION",
+  "config": {
+    "batch_size": 10,
+    "batch_delay": 2.0,
+    "item_delay": 0.3,
+    "max_retries": 3
+  },
+  "stats": {
+    "total_items": 98,
+    "processed": 98,
+    "successful": 98,
+    "failed": 0,
+    "retries": 7,
+    "start_time": 1755032546.1232288,
+    "end_time": 1755032597.7961462,
+    "duration": 51.67291736602783,
+    "success_rate": 100.0
+  },
+  "remaining_ingredients": 98,
+  "success_rate": 100.0,
+  "recommendation": "USE_WEB_INTERFACE_AFTER_DEPLOYMENT"
+}
