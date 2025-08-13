@@ -101,12 +101,12 @@ Após aplicar regras corretas, os testes devem retornar:
 - ✅ **Cliente Firestore**: Corrigido (removido cache problemático)
 - ✅ **Gerenciamento de Token**: Implementado (validação e renovação)  
 - ✅ **Tratamento de Erros**: Melhorado (401/403 específicos)
-- ⚠️ **Regras Firebase**: PENDENTE (configuração no Console)
-- 🔍 **Testes Finais**: PENDENTE (após correção das regras)
+- ✅ **Regras Firebase**: CORRIGIDO (regras de produção aplicadas no Console)
+- ⏳ **Testes Finais**: EM ANDAMENTO (validar se a aplicação funciona como esperado)
 
 ## **Próximos Passos**
 
-1. Aplicar regras seguras no Console Firebase
-2. Testar aplicação com autenticação real
+1. ✅ **Regras seguras aplicadas no Console Firebase**
+2. Testar aplicação com autenticação real para validar a correção
 3. Validar que dados são salvos e recuperados corretamente
 4. Confirmar que acesso sem autenticação é negado
