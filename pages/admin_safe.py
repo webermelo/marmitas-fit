@@ -54,6 +54,25 @@ def show_admin_page():
     with tab3:
         show_stats_safe()
 
+def detect_admin_duplicates():
+    """Detecta ingredientes duplicados por nome no session state."""
+    ingredients = st.session_state.get('demo_ingredients', [])
+    if not ingredients:
+        return False, 0
+
+    name_counts = {}
+    for ing in ingredients:
+        if isinstance(ing, dict):
+            # Usar 'Nome' com maiúscula, que é o padrão da app
+            nome = ing.get('Nome', '').strip().lower()
+            if nome:
+                name_counts[nome] = name_counts.get(nome, 0) + 1
+
+    total_duplicates = sum(count - 1 for count in name_counts.values() if count > 1)
+    has_duplicates = total_duplicates > 0
+    
+    return has_duplicates, total_duplicates
+
 def show_templates_safe():
     """Seção de templates - versão segura"""
     
@@ -204,9 +223,12 @@ Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azei
     st.markdown("---")
     st.subheader("🚨 ATENÇÃO: Limpeza de Dados")
     
+    has_duplicates, total_duplicates = detect_admin_duplicates()
     total_ingredients = len(st.session_state.get('demo_ingredients', []))
-    if total_ingredients > 10:
-        st.error(f"⚠️ PROBLEMA DETECTADO: {total_ingredients} ingredientes duplicados!")
+
+    if has_duplicates:
+        st.error(f"⚠️ PROBLEMA DETECTADO: {total_duplicates} ingredientes duplicados encontrados!")
+        st.info(f"Existem {total_ingredients} ingredientes no total, mas alguns nomes estão repetidos.")
         st.info("💡 Use os botões abaixo para resolver:")
         
         col1, col2 = st.columns(2)
@@ -218,7 +240,7 @@ Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azei
                 
                 for ing in st.session_state.demo_ingredients:
                     nome = ing.get('Nome', '')
-                    if nome and nome not in nomes_vistos and str(nome).lower() not in ['none', 'nan', '']:
+                    if nome and nome.strip().lower() not in nomes_vistos:
                         ingrediente_limpo = {
                             'Nome': nome,
                             'Categoria': ing.get('Categoria', 'Outros'),
@@ -229,7 +251,7 @@ Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azei
                             'Fator_Conversao': float(ing.get('Fator_Conversao', 1000))
                         }
                         ingredientes_unicos.append(ingrediente_limpo)
-                        nomes_vistos.add(nome)
+                        nomes_vistos.add(nome.strip().lower())
                 
                 st.session_state.demo_ingredients = ingredientes_unicos
                 st.success(f"✅ CORRIGIDO! {len(ingredientes_unicos)} ingredientes únicos.")
@@ -246,7 +268,7 @@ Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azei
                 st.success("✅ RESETADO! Dados limpos.")
                 st.rerun()
     else:
-        st.success(f"✅ Dados OK: {total_ingredients} ingredientes")
+        st.success(f"✅ Dados OK: {total_ingredients} ingredientes únicos.")
 
 def show_uploads_safe():
     """Seção de uploads CSV - versão segura"""
