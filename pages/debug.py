@@ -198,7 +198,7 @@ def is_debug_enabled():
     """Verifica se debug está habilitado"""
     # Habilitar debug para admins ou em desenvolvimento
     try:
-        from pages.admin_safe import is_admin
+        from pages.admin_panel import is_admin
         
         if 'user' in st.session_state:
             user_email = st.session_state.user.get('email', '')
