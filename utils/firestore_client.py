@@ -9,6 +9,7 @@ import requests
 import json
 from typing import Dict, List, Optional
 from datetime import datetime
+import os
 
 class FirestoreClient:
     def __init__(self, project_id: str):
