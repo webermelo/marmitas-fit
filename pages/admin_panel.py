@@ -63,8 +63,8 @@ def detect_admin_duplicates():
     name_counts = {}
     for ing in ingredients:
         if isinstance(ing, dict):
-            # Usar 'Nome' com maiúscula, que é o padrão da app
-            nome = ing.get('Nome', '').strip().lower()
+            # CORREÇÃO: Verificar 'Nome' (padrão da app) e 'nome' (padrão do Firebase)
+            nome = (ing.get('Nome') or ing.get('nome') or '').strip().lower()
             if nome:
                 name_counts[nome] = name_counts.get(nome, 0) + 1
 
