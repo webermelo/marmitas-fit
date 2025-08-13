@@ -643,7 +643,7 @@ def main():
     elif selected_page == "👑 Administração":
         logger.log_page_access("Administração", user.get('email'))
         try:
-            from pages.admin_safe import show_admin_page
+            from pages.admin_panel import show_admin_page
             show_admin_page()
         except Exception as e:
             logger.error("Erro ao carregar admin_safe", e)
