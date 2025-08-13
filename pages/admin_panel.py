@@ -58,7 +58,7 @@ def detect_admin_duplicates():
     """Detecta ingredientes duplicados por nome no session state."""
     ingredients = st.session_state.get('demo_ingredients', [])
     if not ingredients:
-        return False, 0
+        return False, 0, {}
 
     name_counts = {}
     for ing in ingredients:
@@ -68,10 +68,11 @@ def detect_admin_duplicates():
             if nome:
                 name_counts[nome] = name_counts.get(nome, 0) + 1
 
-    total_duplicates = sum(count - 1 for count in name_counts.values() if count > 1)
+    duplicates = {name: count for name, count in name_counts.items() if count > 1}
+    total_duplicates = sum(count - 1 for count in duplicates.values())
     has_duplicates = total_duplicates > 0
     
-    return has_duplicates, total_duplicates
+    return has_duplicates, total_duplicates, duplicates
 
 def show_templates_safe():
     """Seção de templates - versão segura"""
@@ -223,12 +224,17 @@ Peixe com Legumes,Light,"{""tilapia"":150_""cenoura"":60_""abobrinha"":60_""azei
     st.markdown("---")
     st.subheader("🚨 ATENÇÃO: Limpeza de Dados")
     
-    has_duplicates, total_duplicates = detect_admin_duplicates()
+    has_duplicates, total_duplicates, duplicate_details = detect_admin_duplicates()
     total_ingredients = len(st.session_state.get('demo_ingredients', []))
 
     if has_duplicates:
         st.error(f"⚠️ PROBLEMA DETECTADO: {total_duplicates} ingredientes duplicados encontrados!")
         st.info(f"Existem {total_ingredients} ingredientes no total, mas alguns nomes estão repetidos.")
+        
+        with st.expander("🔍 Ver nomes duplicados"):
+            for name, count in duplicate_details.items():
+                st.write(f"- '{name.title()}' aparece {count} vezes.")
+
         st.info("💡 Use os botões abaixo para resolver:")
         
         col1, col2 = st.columns(2)
