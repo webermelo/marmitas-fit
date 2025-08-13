@@ -37,7 +37,7 @@ def show_admin_page():
         return
     
     # Interface de administração
-    st.title("👑 Painel de Administração")
+    st.title("👑 Painel de Administração v1.2")
     st.success(f"🔓 Acesso autorizado: {user_email}")
     
     # Tabs principais
